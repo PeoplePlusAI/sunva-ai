@@ -1,0 +1,1 @@
+Some of the words in the following transcription might be wrong due to microphone issues or speech irregularities. Analyse the text and correct the wrong words. Return the corrected text only: {}

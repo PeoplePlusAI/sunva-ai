@@ -1,0 +1,1 @@
+Make the following transcription concise. Return only the concise transcription: {}

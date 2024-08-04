@@ -1,0 +1,27 @@
+# Python gitignore
+
+/.vscode
+/.idea
+/.mypy_cache
+/.pytest_cache
+/.tox
+/__pycache__
+/*.pyc
+/*.pyo
+/*.pyd
+/*.pyi
+/*.pyz
+/*.pyw
+/*.pyz
+/*.pyw
+/*.ipynb_checkpoints
+/.mypy_cache
+/.pytest_cache
+/.tox
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+*.wav
