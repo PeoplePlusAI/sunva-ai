@@ -25,7 +25,11 @@ Please go through the [architecture diagram](https://www.figma.com/board/INrqk91
 ```
 pip install -r requirements.txt
 ```
-3. Run the POC
+3. Create a .env file inside ops dir and add the following variables
+```
+GROQ_API_KEY=your_api_key
+```
+4. Run the POC
 ```
 streamlit run main.py
 ```
