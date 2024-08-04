@@ -2,17 +2,17 @@
 
 ## About SUNVA AI
 
-Having conversations with the deaf can be a challenge. While there are so many live transcription and text to speech tools available in the market, they are not catered for the needs of the deaf and hard to hearing. Mainly it takes a lot of time for the deaf person to read transcriptions and respond to them is a lo. SUNVA AI intelligently simplify and apply various filters on the transcriptions to minimize the amount of time taken to read transcription and switch gaze between the screen and the person.
+Having conversations with the deaf can be a challenge. While there are so many live transcription and text to speech tools available in the market, they do not cater to the needs of the deaf and hard of hearing and aren't designed from accessibility focus. Often it could take a lot of time for the deaf person to read transcriptions and respond to them depending on various factors from person to person. SUNVA AI intelligently simplifies and provides various filters on the transcriptions to minimize the amount of time taken to read transcription and switch gaze between the screen and the person while having the communication..
 
 ## SUNVA AI workplan 
 
 The [first version of the POC](https://www.figma.com/proto/xK0fvVJL9wRWTkwdBeRu2U/Sunva.Ai?page-id=84%3A803&node-id=84-805&viewport=917%2C520%2C0.14&t=ZpNPT9hGNjHWzrqy-1&scaling=min-zoom&content-scaling=fixed&starting-point-node-id=84%3A805&show-proto-sidebar=1) will have the following features along with speaker diarization and text to speech. 
 
-1. Text simplification using LLM
-2. Text highlighting using LLM
-3. Intelligently apply simplification/highlighting to the transcriptions
+1. Text (transcript) simplification using LLM
+2. Text highlighting of important and critical keywords (transcript) using LLM
+3. Intelligently apply simplification/highlighting to the transcriptions and provide easy summarizations.
 
-Based on the user feedback from our focus group, we will refine and add more features to the POC.
+Based on the user feedbacks from our focus groups, we will refine and add more features to the POC.
 
 ## SUNVA AI Architecture
 
