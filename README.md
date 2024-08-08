@@ -33,11 +33,9 @@ GROQ_API_KEY=your_api_key
 ```
 uvicorn main:app --reload
 ```
-5. Open the browser and open the index.html file.
-6. Click on the start button to start the conversation.
-7. Or run the following to see this in terminal
+5. Open the browser and go to
 ```
-python client.py
+http://localhost:8000/
 ```
 
 ## How to contribute
