@@ -31,7 +31,13 @@ GROQ_API_KEY=your_api_key
 ```
 4. Run the POC
 ```
-streamlit run main.py
+uvicorn main:app --reload
+```
+5. Open the browser and open the index.html file.
+6. Click on the start button to start the conversation.
+7. Or run the following to see this in terminal
+```
+python client.py
 ```
 
 ## How to contribute
