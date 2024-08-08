@@ -1,6 +1,9 @@
 from groq import Groq
+from TTS.api import TTS
 from faster_whisper import WhisperModel
 import os
+
+tts = TTS(model_name="tts_models/en/ljspeech/tacotron2-DDC")
 
 def speech_to_text_groq(audio_chunk: str, client: Groq) -> str:
     transcription = client.audio.transcriptions.create(
@@ -29,3 +32,7 @@ def speech_to_text(audio_chunk, model):
         ]
     )
     return speech_text 
+
+def text_to_speech(text: str, tts: TTS=tts) -> list:
+    audio = tts.tts(text)
+    return audio

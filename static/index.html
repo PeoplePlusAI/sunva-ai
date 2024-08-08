@@ -45,6 +45,15 @@
             padding: 10px 20px;
             font-size: 16px;
         }
+        .tts-section {
+            padding: 20px;
+        }
+        .tts-input {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            font-size: 16px;
+        }
     </style>
     <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
 </head>
@@ -63,15 +72,21 @@
             <pre id="processed-text"></pre>
         </div>
     </div>
+    <div class="tts-section">
+        <h2>Text-to-Speech</h2>
+        <textarea id="text-input" class="tts-input" placeholder="Type here..."></textarea>
+    </div>
 
     <script>
         let transcribeSocket;
         let processSocket;
+        let ttsSocket;
         let transcription = '';
         let wordCount = 0;
         const WORD_THRESHOLD = 50;
         const TRANSCRIBE_WS_URL = "ws://localhost:8000/transcribe";
         const PROCESS_WS_URL = "ws://localhost:8000/process";
+        const TTS_WS_URL = "ws://localhost:8000/tts";
 
         let recorder;
         let audioChunks = [];
@@ -158,7 +173,7 @@
                     mimeType: 'audio/wav',
                     numberOfAudioChannels: 2,
                     desiredSampRate: 16000,
-                    timeSlice: 20000, // Get data every 10 seconds
+                    timeSlice: 20000, // Get data every 20 seconds
                     ondataavailable: (blob) => {
                         if (blob && blob.size > 0) {
                             audioChunks.push(blob);
@@ -213,6 +228,55 @@
 
         document.getElementById('start-button').addEventListener('click', startTranscription);
         document.getElementById('stop-button').addEventListener('click', stopTranscription);
+
+        // TTS section
+        const textInput = document.getElementById("text-input");
+
+        textInput.addEventListener('input', () => {
+            const currentText = textInput.value;
+            const sentences = currentText.split('.');
+            if (sentences.length > 1) {
+                const buffer = sentences.slice(0, -1).join('.') + '.';
+                console.log("Sending TTS text:", buffer);
+                sendTtsText(buffer);
+                textInput.value = sentences[sentences.length - 1];
+            }
+        });
+
+        function sendTtsText(text) {
+            if (!ttsSocket || ttsSocket.readyState !== WebSocket.OPEN) {
+                ttsSocket = new WebSocket(TTS_WS_URL);
+                ttsSocket.onopen = () => {
+                    console.log("TTS WebSocket connected");
+                    ttsSocket.send(text);
+                };
+            } else {
+                ttsSocket.send(text);
+            }
+
+            ttsSocket.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                if (message.audio) {
+                    console.log("Received TTS audio data");
+                    playTtsAudio(message.audio);
+                }
+            };
+
+            ttsSocket.onclose = () => {
+                console.log("TTS WebSocket disconnected");
+            };
+        }
+
+        function playTtsAudio(audioBase64) {
+            const audioBytes = Uint8Array.from(atob(audioBase64), c => c.charCodeAt(0));
+            const audioContext = new AudioContext();
+            audioContext.decodeAudioData(audioBytes.buffer, buffer => {
+                const source = audioContext.createBufferSource();
+                source.buffer = buffer;
+                source.connect(audioContext.destination);
+                source.start();
+            });
+        }
     </script>
 </body>
 </html>

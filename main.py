@@ -4,16 +4,19 @@ from fastapi import (
     WebSocketDisconnect, 
     HTTPException
 )
-from core.ai.speech import speech_to_text_groq
+from core.ai.speech import speech_to_text_groq, text_to_speech
+from fastapi.responses import HTMLResponse, FileResponse
 from core.ai.text import process_transcription
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from groq import Groq
+import numpy as np
 import asyncio
 import base64
 import uuid
 import wave
 import json
+import io
 import os
 
 # Initialize environment variables
@@ -30,6 +33,10 @@ transcriptions = []
 processed_texts = []
 
 executor = ThreadPoolExecutor(max_workers=4)
+
+def float32_to_int16(audio_array):
+    # Scale float32 array to int16
+    return np.int16(audio_array * 32767)
 
 @app.websocket("/transcribe")
 async def websocket_transcribe(websocket: WebSocket):
@@ -102,6 +109,44 @@ async def get_transcription(transcription_id: int):
     if transcription_id < 0 or transcription_id >= len(transcriptions):
         raise HTTPException(status_code=404, detail="Transcription not found")
     return transcriptions[transcription_id]
+
+
+@app.websocket("/tts")
+async def tts_websocket(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            text = await websocket.receive_text()
+            print(f"Received text for TTS: {text}")
+            audio_data = await asyncio.get_event_loop().run_in_executor(
+                executor, text_to_speech, text)
+            if audio_data:
+                # Convert float32 numpy array to int16
+                audio_int16 = float32_to_int16(np.array(audio_data, dtype=np.float32))
+                audio_bytes = audio_int16.tobytes()
+                
+                # Create a WAV file in memory
+                wav_io = io.BytesIO()
+                with wave.open(wav_io, 'wb') as wav_file:
+                    wav_file.setnchannels(1)
+                    wav_file.setsampwidth(2)  # 2 bytes per sample
+                    wav_file.setframerate(16000)
+                    wav_file.writeframes(audio_bytes)
+                
+                wav_io.seek(0)
+                # Encode the WAV file to base64
+                audio_base64 = base64.b64encode(wav_io.read()).decode('utf-8')
+                
+                await websocket.send_json({"audio": audio_base64})
+            else:
+                print("No audio data received from text_to_speech")
+    except WebSocketDisconnect:
+        print("TTS client disconnected")
+
+@app.get("/")
+async def get():
+    return FileResponse("static/index.html")
+
 
 if __name__ == "__main__":
     import uvicorn
