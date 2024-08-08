@@ -1,0 +1,8 @@
+streamlit
+numpy
+sounddevice
+soundfile
+groq
+TTS
+faster-whisper
+python-dotenv
