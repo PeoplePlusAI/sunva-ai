@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Transcription and Processing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+        }
+        .columns {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .column {
+            flex: 1;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        .column:first-child {
+            border-right: 1px solid #ccc;
+        }
+        h2 {
+            text-align: center;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .buttons {
+            text-align: center;
+            margin: 10px 0;
+        }
+        button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+    <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
+</head>
+<body>
+    <div class="buttons">
+        <button id="start-button">Start Transcription</button>
+        <button id="stop-button" style="display:none;">Stop Transcription</button>
+    </div>
+    <div class="columns">
+        <div class="column">
+            <h2>Transcription</h2>
+            <pre id="transcription"></pre>
+        </div>
+        <div class="column">
+            <h2>Processed Text</h2>
+            <pre id="processed-text"></pre>
+        </div>
+    </div>
+
+    <script>
+        let transcribeSocket;
+        let processSocket;
+        let transcription = '';
+        let wordCount = 0;
+        const WORD_THRESHOLD = 50;
+        const TRANSCRIBE_WS_URL = "ws://localhost:8000/transcribe";
+        const PROCESS_WS_URL = "ws://localhost:8000/process";
+
+        let recorder;
+        let audioChunks = [];
+        let recordingInterval;
+
+        function countWords(text) {
+            return text.split(/\s+/).length;
+        }
+
+        function startTranscription() {
+            transcribeSocket = new WebSocket(TRANSCRIBE_WS_URL);
+            processSocket = new WebSocket(PROCESS_WS_URL);
+
+            transcribeSocket.onopen = () => {
+                console.log('Transcription WebSocket connected');
+                document.getElementById('start-button').style.display = 'none';
+                document.getElementById('stop-button').style.display = 'block';
+                startRecording();
+            };
+
+            transcribeSocket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.transcription) {
+                    transcription += data.transcription + " ";
+                    document.getElementById('transcription').textContent += data.transcription + " ";
+                    wordCount += countWords(data.transcription);
+
+                    if (wordCount >= WORD_THRESHOLD) {
+                        processTranscription();
+                        wordCount = 0;
+                    }
+                }
+            };
+
+            transcribeSocket.onclose = () => {
+                console.log('Transcription WebSocket disconnected');
+                document.getElementById('start-button').style.display = 'block';
+                document.getElementById('stop-button').style.display = 'none';
+                stopRecording();
+            };
+
+            processSocket.onopen = () => {
+                console.log('Processing WebSocket connected');
+            };
+
+            processSocket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.processed_text) {
+                    document.getElementById('processed-text').innerHTML += formatProcessedText(data.processed_text) + "\n";
+                    transcription = '';  // Reset the transcription
+                }
+            };
+
+            processSocket.onclose = () => {
+                console.log('Processing WebSocket disconnected');
+            };
+        }
+
+        function stopTranscription() {
+            if (transcribeSocket) {
+                transcribeSocket.close();
+            }
+            if (processSocket) {
+                processSocket.close();
+            }
+            stopRecording();
+        }
+
+        function processTranscription() {
+            if (processSocket.readyState === WebSocket.OPEN) {
+                processSocket.send(JSON.stringify({ text: transcription }));
+            }
+        }
+
+        async function startRecording() {
+            try {
+                console.log('Starting recording...');
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                console.log('Microphone access granted');
+                
+                recorder = new RecordRTC(stream, {
+                    type: 'audio',
+                    recorderType: RecordRTC.StereoAudioRecorder,
+                    mimeType: 'audio/wav',
+                    numberOfAudioChannels: 2,
+                    desiredSampRate: 16000,
+                    timeSlice: 20000, // Get data every 10 seconds
+                    ondataavailable: (blob) => {
+                        if (blob && blob.size > 0) {
+                            audioChunks.push(blob);
+                            sendAudioChunks();
+                        }
+                    }
+                });
+
+                recorder.startRecording();
+                console.log('Recording started');
+            } catch (error) {
+                console.log('Error accessing microphone:', error);
+            }
+        }
+
+        function stopRecording() {
+            console.log('Stopping recording...');
+            if (recorder && recorder.getState() !== 'inactive') {
+                recorder.stopRecording(() => {
+                    sendAudioChunks();
+                });
+            }
+        }
+
+        async function sendAudioChunks() {
+            if (audioChunks.length > 0) {
+                console.log('Sending audio chunks');
+                const audioBlob = audioChunks.shift();
+                const arrayBuffer = await audioBlob.arrayBuffer();
+                const base64String = arrayBufferToBase64(arrayBuffer);
+                console.log('Base64 audio data length:', base64String.length);
+                transcribeSocket.send(JSON.stringify({ audio: base64String }));
+                console.log('Sent audio data to server');
+            } else {
+                console.log('No audio chunks to send');
+            }
+        }
+
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            const len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+
+        function formatProcessedText(text) {
+            return text.replace(/\*(.*?)\*/g, '<b>$1</b>');
+        }
+
+        document.getElementById('start-button').addEventListener('click', startTranscription);
+        document.getElementById('stop-button').addEventListener('click', stopTranscription);
+    </script>
+</body>
+</html>
