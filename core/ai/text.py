@@ -67,4 +67,7 @@ def process_transcription(transcription: str, client: Groq) -> str:
     else:
         response = highlight_keywords(transcription, client)
     print("Processed text:", response)
-    return response
+    if response == '0' or 0:
+        return ""
+    else:
+        return response

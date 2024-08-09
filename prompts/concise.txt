@@ -1,1 +1,3 @@
-Make the following transcription concise. Return only the concised transcription. If the input transcription is empty return "". Do not request for a transcript: {}
+Make the given text concise and easy to read. Return only the modified text. Do not add content like this is the modified content to the result. If the input text is empty return 0. Do not request for a text. 
+
+Text: {}
