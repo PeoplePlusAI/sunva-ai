@@ -78,23 +78,10 @@
     </div>
 
     <script>
-        let transcribeSocket;
-        let processSocket;
-        let ttsSocket;
-        let transcription = '';
-        let wordCount = 0;
-        const WORD_THRESHOLD = 50;
-        const TRANSCRIBE_WS_URL = "ws://localhost:8000/transcribe";
-        const PROCESS_WS_URL = "ws://localhost:8000/process";
-        const TTS_WS_URL = "ws://localhost:8000/tts";
-
+        let transcribeAndProcessSocket;
         let recorder;
         const audioQueue = [];
         let isSending = false;
-
-        function countWords(text) {
-            return text.split(/\s+/).length;
-        }
 
         async function startRecording() {
             try {
@@ -140,7 +127,7 @@
                 const arrayBuffer = await audioBlob.arrayBuffer();
                 const base64String = arrayBufferToBase64(arrayBuffer);
                 console.log('Sending audio data to server');
-                transcribeSocket.send(JSON.stringify({ audio: base64String }));
+                transcribeAndProcessSocket.send(JSON.stringify({ audio: base64String }));
                 console.log('Sent audio data to server');
                 isSending = false;
                 sendAudioChunks();  // Continue sending remaining chunks
@@ -148,7 +135,6 @@
                 console.log('No audio chunks to send');
             }
         }
-
 
         function arrayBufferToBase64(buffer) {
             let binary = '';
@@ -164,79 +150,43 @@
             return text.replace(/\*(.*?)\*/g, '<b>$1</b>');
         }
 
-        function startTranscription() {
-            transcribeSocket = new WebSocket(TRANSCRIBE_WS_URL);
-            processSocket = new WebSocket(PROCESS_WS_URL);
+        function startTranscriptionAndProcessing() {
+            transcribeAndProcessSocket = new WebSocket("ws://localhost:8000/v1/ws/transcription");
 
-            transcribeSocket.onopen = () => {
-                console.log('Transcription WebSocket connected');
+            transcribeAndProcessSocket.onopen = () => {
+                console.log('Transcription and Processing WebSocket connected');
                 document.getElementById('start-button').style.display = 'none';
                 document.getElementById('stop-button').style.display = 'block';
                 startRecording();
             };
 
-            transcribeSocket.onmessage = (event) => {
+            transcribeAndProcessSocket.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 if (data.transcription) {
-                    transcription += data.transcription + " ";
                     document.getElementById('transcription').textContent += data.transcription + " ";
-                    wordCount += countWords(data.transcription);
-                    
-                    console.log("Current word count:", wordCount);
-
-                    if (wordCount >= WORD_THRESHOLD) {
-                        console.log("Word threshold reached, processing transcription.");
-                        processTranscription(); // Call processTranscription to send data to the server
-                        wordCount = 0;
-                    }
+                }
+                if (data.processed_text) {
+                    document.getElementById('processed-text').innerHTML += formatProcessedText(data.processed_text) + "\n";
                 }
             };
 
-            transcribeSocket.onclose = () => {
-                console.log('Transcription WebSocket disconnected');
+            transcribeAndProcessSocket.onclose = () => {
+                console.log('Transcription and Processing WebSocket disconnected');
                 document.getElementById('start-button').style.display = 'block';
                 document.getElementById('stop-button').style.display = 'none';
                 stopRecording();
             };
-
-            processSocket.onopen = () => {
-                console.log('Processing WebSocket connected');
-            };
-
-            processSocket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                if (data.processed_text) {
-                    document.getElementById('processed-text').innerHTML += formatProcessedText(data.processed_text) + "\n";
-                    transcription = '';  // Reset the transcription
-                }
-            };
-
-            processSocket.onclose = () => {
-                console.log('Processing WebSocket disconnected');
-            };
         }
 
-        function stopTranscription() {
-            if (transcribeSocket) {
-                transcribeSocket.close();
-            }
-            if (processSocket) {
-                processSocket.close();
+        function stopTranscriptionAndProcessing() {
+            if (transcribeAndProcessSocket) {
+                transcribeAndProcessSocket.close();
             }
             stopRecording();
         }
 
-        function processTranscription() {
-            if (processSocket && processSocket.readyState === WebSocket.OPEN) {
-                console.log("Sending transcription for processing:", transcription);
-                processSocket.send(JSON.stringify({ text: transcription }));
-            } else {
-                console.error("Processing WebSocket is not open.");
-            }
-        }
-        
-        document.getElementById('start-button').addEventListener('click', startTranscription);
-        document.getElementById('stop-button').addEventListener('click', stopTranscription);
+        document.getElementById('start-button').addEventListener('click', startTranscriptionAndProcessing);
+        document.getElementById('stop-button').addEventListener('click', stopTranscriptionAndProcessing);
 
         // TTS section
         const textInput = document.getElementById("text-input");
@@ -253,8 +203,9 @@
         });
 
         function sendTtsText(text) {
+            let ttsSocket;
             if (!ttsSocket || ttsSocket.readyState !== WebSocket.OPEN) {
-                ttsSocket = new WebSocket(TTS_WS_URL);
+                ttsSocket = new WebSocket("ws://localhost:8000/tts");
                 ttsSocket.onopen = () => {
                     console.log("TTS WebSocket connected");
                     ttsSocket.send(text);
