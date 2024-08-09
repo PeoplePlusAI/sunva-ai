@@ -4,12 +4,16 @@ from fastapi import (
     WebSocketDisconnect, 
     HTTPException
 )
-from core.ai.speech import speech_to_text_groq, text_to_speech
-from fastapi.responses import HTMLResponse, FileResponse
+from core.ai.speech import (
+    speech_to_text_groq, 
+    text_to_speech
+)
+from fastapi.responses import FileResponse
 from core.ai.text import process_transcription
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from groq import Groq
+import traceback
 import numpy as np
 import asyncio
 import base64
@@ -38,44 +42,45 @@ def float32_to_int16(audio_array):
     # Scale float32 array to int16
     return np.int16(audio_array * 32767)
 
+import io
+
+
 @app.websocket("/transcribe")
 async def websocket_transcribe(websocket: WebSocket):
     await websocket.accept()
-    transcription = ""
+    audio_buffer = io.BytesIO()  # Buffer to store continuous audio stream
     try:
         while True:
             data = await websocket.receive_text()
             message = json.loads(data)
-            print("Received message:", message)
             if "audio" in message:
                 audio_base64 = message["audio"]
-                # Decode the base64 audio data
                 audio_data = base64.b64decode(audio_base64)
-                print("Received audio data of length:", len(audio_data))
-                # Save the decoded audio data to a temporary WAV file
+                audio_buffer.write(audio_data)
+
+                # Save the buffer as a temporary WAV file
                 audio_filename = f"temp_{uuid.uuid4().hex}.wav"
                 with wave.open(audio_filename, "wb") as wf:
                     wf.setnchannels(1)
-                    wf.setsampwidth(2)  # Assuming 16-bit PCM format
+                    wf.setsampwidth(2)
                     wf.setframerate(16000)
-                    wf.writeframes(audio_data)
-                
-                # Perform transcription on the audio file
+                    wf.writeframes(audio_buffer.getvalue())
+
+                # Perform transcription on the continuous audio stream
                 partial_transcription = await asyncio.get_event_loop().run_in_executor(
                     executor, speech_to_text_groq, audio_filename, client)
+                
+                audio_buffer.seek(0)  # Reset buffer for next chunk
                 print("Partial transcription:", partial_transcription)
                 os.remove(audio_filename)  # Clean up the temporary file
                 
-                # Only add new transcriptions to avoid repetition
-                transcription += partial_transcription + " "
-                transcriptions.append(partial_transcription)
                 # Send the real-time transcription back to the client
                 await websocket.send_text(json.dumps({"transcription": partial_transcription}))
                 print("Sent transcription:", partial_transcription)
     except WebSocketDisconnect:
         print("Client disconnected")
     except Exception as e:
-        print(f"Error: {e}")
+        traceback.print_exc()
 
 
 @app.websocket("/process")
@@ -88,13 +93,16 @@ async def websocket_process(websocket: WebSocket):
             if "text" in message:
                 text_to_process = message["text"]
                 print("Received text for processing:", text_to_process)
-                # Process the received text
-                processed_text = await asyncio.get_event_loop().run_in_executor(
-                    executor, process_transcription, text_to_process, client)
-                processed_texts.append(processed_text)
-                # Send the processed text back to the client
-                await websocket.send_text(json.dumps({"processed_text": processed_text}))
-                print("Sent processed text:", processed_text)
+                
+                # Simulate progressive processing (for demonstration)
+                partial_texts = text_to_process.split(". ")
+                for part in partial_texts:
+                    processed_text = await asyncio.get_event_loop().run_in_executor(
+                        executor, process_transcription, part, client)
+                    processed_texts.append(processed_text)
+                    await websocket.send_text(json.dumps({"processed_text": processed_text}))
+                    print("Sent processed text:", processed_text)
+                    await asyncio.sleep(0.5)  # Simulate delay for each part
     except WebSocketDisconnect:
         print("Client disconnected")
     except Exception as e:

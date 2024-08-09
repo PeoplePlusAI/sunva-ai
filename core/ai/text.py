@@ -47,7 +47,6 @@ def should_summarize(transcription: str, client: Groq) -> bool:
         ]
     )
     response = chat_completion.choices[0].message.content
-    print(response)
     return response.lower() == "yes"
 
 def correct_transcription(transcription: str, client: Groq) -> str:
@@ -64,6 +63,8 @@ def correct_transcription(transcription: str, client: Groq) -> str:
 
 def process_transcription(transcription: str, client: Groq) -> str:
     if should_summarize(transcription, client):
-        return concise_transcription(transcription, client)
+        response = concise_transcription(transcription, client)
     else:
-        return highlight_keywords(transcription, client)
+        response = highlight_keywords(transcription, client)
+    print("Processed text:", response)
+    return response
