@@ -1,1 +1,1 @@
-Put b<> in the beginning and end of important keywords in the following transcription. Return only the modified transcript no additional texts: {}
+Put b<> in the beginning and end of important keywords in the following transcription. Return only the modified transcript. Please do not put any additional text. If there is no transcript provided return "" instead of requesting transcript: {}

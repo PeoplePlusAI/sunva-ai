@@ -15,6 +15,7 @@ def speech_to_text_groq(audio_chunk: str, client: Groq) -> str:
     )
     return transcription.text
 
+
 model = WhisperModel(
     "base",
     device="cpu",

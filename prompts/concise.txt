@@ -1,1 +1,1 @@
-Make the following transcription concise. Return only the concise transcription: {}
+Make the following transcription concise. Return only the concised transcription. If the input transcription is empty return "". Do not request for a transcript: {}

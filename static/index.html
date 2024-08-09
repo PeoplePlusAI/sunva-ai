@@ -89,11 +89,79 @@
         const TTS_WS_URL = "ws://localhost:8000/tts";
 
         let recorder;
-        let audioChunks = [];
-        let recordingInterval;
+        const audioQueue = [];
+        let isSending = false;
 
         function countWords(text) {
             return text.split(/\s+/).length;
+        }
+
+        async function startRecording() {
+            try {
+                console.log('Starting recording...');
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                console.log('Microphone access granted');
+
+                recorder = new RecordRTC(stream, {
+                    type: 'audio',
+                    recorderType: RecordRTC.StereoAudioRecorder,
+                    mimeType: 'audio/wav',
+                    numberOfAudioChannels: 1,  // Mono channel is sufficient for speech recognition
+                    desiredSampRate: 16000,
+                    timeSlice: 1000, // Get data every 5 seconds
+                    ondataavailable: (blob) => {
+                        if (blob && blob.size > 0) {
+                            audioQueue.push(blob);
+                            sendAudioChunks();
+                        }
+                    }
+                });
+
+                recorder.startRecording();
+                console.log('Recording started');
+            } catch (error) {
+                console.log('Error accessing microphone:', error);
+            }
+        }
+
+        function stopRecording() {
+            console.log('Stopping recording...');
+            if (recorder && recorder.getState() !== 'inactive') {
+                recorder.stopRecording(() => {
+                    sendAudioChunks();
+                });
+            }
+        }
+
+        async function sendAudioChunks() {
+            if (audioQueue.length > 0 && !isSending) {
+                isSending = true;
+                const audioBlob = audioQueue.shift();
+                const arrayBuffer = await audioBlob.arrayBuffer();
+                const base64String = arrayBufferToBase64(arrayBuffer);
+                console.log('Sending audio data to server');
+                transcribeSocket.send(JSON.stringify({ audio: base64String }));
+                console.log('Sent audio data to server');
+                isSending = false;
+                sendAudioChunks();  // Continue sending remaining chunks
+            } else {
+                console.log('No audio chunks to send');
+            }
+        }
+
+
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            const len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+
+        function formatProcessedText(text) {
+            return text.replace(/\*(.*?)\*/g, '<b>$1</b>');
         }
 
         function startTranscription() {
@@ -113,9 +181,12 @@
                     transcription += data.transcription + " ";
                     document.getElementById('transcription').textContent += data.transcription + " ";
                     wordCount += countWords(data.transcription);
+                    
+                    console.log("Current word count:", wordCount);
 
                     if (wordCount >= WORD_THRESHOLD) {
-                        processTranscription();
+                        console.log("Word threshold reached, processing transcription.");
+                        processTranscription(); // Call processTranscription to send data to the server
                         wordCount = 0;
                     }
                 }
@@ -156,76 +227,14 @@
         }
 
         function processTranscription() {
-            if (processSocket.readyState === WebSocket.OPEN) {
+            if (processSocket && processSocket.readyState === WebSocket.OPEN) {
+                console.log("Sending transcription for processing:", transcription);
                 processSocket.send(JSON.stringify({ text: transcription }));
-            }
-        }
-
-        async function startRecording() {
-            try {
-                console.log('Starting recording...');
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                console.log('Microphone access granted');
-                
-                recorder = new RecordRTC(stream, {
-                    type: 'audio',
-                    recorderType: RecordRTC.StereoAudioRecorder,
-                    mimeType: 'audio/wav',
-                    numberOfAudioChannels: 2,
-                    desiredSampRate: 16000,
-                    timeSlice: 20000, // Get data every 20 seconds
-                    ondataavailable: (blob) => {
-                        if (blob && blob.size > 0) {
-                            audioChunks.push(blob);
-                            sendAudioChunks();
-                        }
-                    }
-                });
-
-                recorder.startRecording();
-                console.log('Recording started');
-            } catch (error) {
-                console.log('Error accessing microphone:', error);
-            }
-        }
-
-        function stopRecording() {
-            console.log('Stopping recording...');
-            if (recorder && recorder.getState() !== 'inactive') {
-                recorder.stopRecording(() => {
-                    sendAudioChunks();
-                });
-            }
-        }
-
-        async function sendAudioChunks() {
-            if (audioChunks.length > 0) {
-                console.log('Sending audio chunks');
-                const audioBlob = audioChunks.shift();
-                const arrayBuffer = await audioBlob.arrayBuffer();
-                const base64String = arrayBufferToBase64(arrayBuffer);
-                console.log('Base64 audio data length:', base64String.length);
-                transcribeSocket.send(JSON.stringify({ audio: base64String }));
-                console.log('Sent audio data to server');
             } else {
-                console.log('No audio chunks to send');
+                console.error("Processing WebSocket is not open.");
             }
         }
-
-        function arrayBufferToBase64(buffer) {
-            let binary = '';
-            const bytes = new Uint8Array(buffer);
-            const len = bytes.byteLength;
-            for (let i = 0; i < len; i++) {
-                binary += String.fromCharCode(bytes[i]);
-            }
-            return window.btoa(binary);
-        }
-
-        function formatProcessedText(text) {
-            return text.replace(/\*(.*?)\*/g, '<b>$1</b>');
-        }
-
+        
         document.getElementById('start-button').addEventListener('click', startTranscription);
         document.getElementById('stop-button').addEventListener('click', stopTranscription);
 
