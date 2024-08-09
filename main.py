@@ -99,10 +99,11 @@ async def websocket_process(websocket: WebSocket):
                 for part in partial_texts:
                     processed_text = await asyncio.get_event_loop().run_in_executor(
                         executor, process_transcription, part, client)
-                    processed_texts.append(processed_text)
-                    await websocket.send_text(json.dumps({"processed_text": processed_text}))
-                    print("Sent processed text:", processed_text)
-                    await asyncio.sleep(0.5)  # Simulate delay for each part
+                    if processed_text:
+                        processed_texts.append(processed_text)
+                        await websocket.send_text(json.dumps({"processed_text": processed_text}))
+                        print("Sent processed text:", processed_text)
+                        await asyncio.sleep(0.5)  # Simulate delay for each part
     except WebSocketDisconnect:
         print("Client disconnected")
     except Exception as e:
