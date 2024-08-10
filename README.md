@@ -37,6 +37,16 @@ uvicorn main:app --reload
 ```
 http://localhost:8000/
 ```
+### Using Poetry installer
+
+1. Run this to enter virtual env
+```
+poetry shell
+```
+2. Install the dependencies
+```
+poetry install
+```
 
 ## How to contribute
 
