@@ -205,7 +205,7 @@
         function sendTtsText(text) {
             let ttsSocket;
             if (!ttsSocket || ttsSocket.readyState !== WebSocket.OPEN) {
-                ttsSocket = new WebSocket("ws://localhost:8000/tts");
+                ttsSocket = new WebSocket("ws://localhost:8000/v1/ws/speech");
                 ttsSocket.onopen = () => {
                     console.log("TTS WebSocket connected");
                     ttsSocket.send(text);
