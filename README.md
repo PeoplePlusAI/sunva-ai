@@ -23,7 +23,7 @@ Please go through the [architecture diagram](https://www.figma.com/board/INrqk91
 1. Clone the repository
 2. Install the dependencies
 ```
-pip install -r requirements.txt
+poetry install
 ```
 3. Create a .env file inside ops dir and add the following variables
 ```
