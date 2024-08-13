@@ -1,3 +1,3 @@
-Make the given text concise and easy to read. Return only the modified text. Do not add content like this is the modified content to the result. If the input text is empty return 0. Do not request for a text. 
+Make the given text concise and easy to read. The text is from a conversation from one person to another or a set of people so keep the conversation format. For example when the text is a question make it concise but keep the original question format. Return only the modified text. Do not add content like this is the modified content to the result. If the input text is empty return 0. Do not request for a text. 
 
 Text: {}
