@@ -24,4 +24,5 @@ websocket-client = "1.6.4"
 websockets = "11.0.3"
 python-dotenv = "^1.0.0"
 TTS = "0.22.0"
+pydantic = "^2.8.2"
 
