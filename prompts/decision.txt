@@ -1,1 +1,3 @@
-Answer Yes or No. Should I summarize the following transcription: {} ?
+Analyze the given text and answer True or False based on whether we can summarize this text for the user to read it faster. Text cannot be summarized if there is a high chance of losing important information in the given text when there are too much information in the text in such cases answer False.
+
+text: {}

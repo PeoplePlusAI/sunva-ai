@@ -57,7 +57,7 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
     audio_buffer = io.BytesIO()  # Buffer to store continuous audio stream
     transcription = ""
     word_count = 0
-    WORD_THRESHOLD = 50
+    WORD_THRESHOLD = 30
     
     try:
         while True:
