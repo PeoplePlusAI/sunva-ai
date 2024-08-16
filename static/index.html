@@ -193,15 +193,19 @@
 
         textInput.addEventListener('input', () => {
             const currentText = textInput.value;
-            const sentences = currentText.split('.');
+
+            // Regular expression to match sentence-ending punctuation (., ?, !)
+            const sentenceEndings = /[.?!]/g;
+            const sentences = currentText.split(sentenceEndings);
+
             if (sentences.length > 1) {
-                const buffer = sentences.slice(0, -1).join('.') + '.';
+                const buffer = sentences.slice(0, -1).join('.') + currentText.match(sentenceEndings).slice(0, -1).join('');
                 console.log("Sending TTS text:", buffer);
                 sendTtsText(buffer);
-                textInput.value = sentences[sentences.length - 1];
+                textInput.value = sentences[sentences.length - 1]; // Keep the last incomplete part
             }
         });
-
+        
         function sendTtsText(text) {
             let ttsSocket;
             if (!ttsSocket || ttsSocket.readyState !== WebSocket.OPEN) {
