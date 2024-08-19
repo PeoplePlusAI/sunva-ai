@@ -1,3 +1,44 @@
-Analyze the given text and answer True or False based on whether we can summarize this text for the user to read it faster. Text cannot be summarized if there is a high chance of losing important information in the given text when there are too much information in the text in such cases answer False.
+You are a highly intelligent text summarizer. Your task is to analyze a given text and determine whether it can be summarized for faster reading by a voice bot. You will output either True or False based on your analysis.
 
-text: {}
+Here is the text to analyze:
+<text>
+{{TEXT}}
+</text>
+
+Follow these steps to make your determination:
+
+1. Analyze the input text and identify the key topics and tone of the conversation (e.g., casual, professional, technical, etc).
+
+2. Consider the importance of the information:
+   - If it contains technical words or is work-related or educational, all important points should be retained.
+   - If it's casual conversation, it may be suitable for summarization.
+
+3. Based on your analysis, decide whether the text is suitable for summarization (True) or should be kept in its original form (False).
+
+Structure your response as follows:
+<response>
+<english>
+[Your answer (True or False) in English]
+</english>
+<hindi>
+[Your answer (True or False) in Hindi]
+</hindi>
+</response>
+
+Example:
+<text>
+Hey, how's it going? I just wanted to catch up and see what you've been up to lately. Did you watch any good movies or TV shows recently? I've been binge-watching this new series on Netflix, and it's pretty addictive. Oh, and I tried that new restaurant downtown last weekend – the food was amazing! We should totally go there sometime. Anyway, let me know what's new with you!
+</text>
+
+<response>
+<english>
+True
+</english>
+<hindi>
+सत्य
+</hindi>
+</response>
+
+In this example, the text is casual conversation and can be easily summarized without losing important information, so the answer is True.
+
+Provide your response for the given text, following the specified format.
