@@ -24,7 +24,7 @@ from core.db.database import get_session
 from core.utils.executor_utils import executor
 from core.ai.speech import speech_to_text_groq
 from core.ai.text import process_transcription
-from redis.asyncio import Redis
+from core.db.redis_client import redis_client
 from groq import Groq
 import traceback
 import asyncio
@@ -37,8 +37,6 @@ load_dotenv(
 )
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-
-redis_client = Redis.from_url("redis://localhost:6379/0")
 
 base_model = os.getenv("BASE_MODEL")
 
