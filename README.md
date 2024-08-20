@@ -28,6 +28,9 @@ poetry install
 3. Create a .env file inside ops dir and add the following variables
 ```
 GROQ_API_KEY=your_api_key
+CLAUDE_API_KEY=your_api_key
+OPENAI_API_KEY=your_api_key
+BASE_MODEL=model_name (eg: Claude 3 Sonnet)
 ```
 4. Run the POC
 ```

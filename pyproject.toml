@@ -30,3 +30,5 @@ redis = "5.0.8"
 sqlalchemy = "2.0.32"
 sqlmodel = "0.0.21"
 aiosqlite = '0.20.0'
+anthropic = "0.34.1"
+openai = "1.41.1"
