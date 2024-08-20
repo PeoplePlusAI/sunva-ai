@@ -37,7 +37,10 @@ load_dotenv(
 )
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
 redis_client = Redis.from_url("redis://localhost:6379/0")
+
+base_model = os.getenv("BASE_MODEL")
 
 router = APIRouter()
 
@@ -96,7 +99,7 @@ async def websocket_transcribe_and_process(
 
                 if word_count >= WORD_THRESHOLD:
                     processed_text = await asyncio.get_event_loop().run_in_executor(
-                        executor, process_transcription, transcription.strip(), client
+                        executor, process_transcription, transcription.strip(), base_model
                     )
 
                     processed_transcription += processed_text + " "

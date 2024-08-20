@@ -1,4 +1,5 @@
 import json
+from core.llm.llm import LLM
 from groq import Groq
 from core.models.instructor import (
     ProcessedText, 
@@ -18,67 +19,31 @@ with open("prompts/decision.txt", "r") as f:
 with open("prompts/correction.txt", "r") as f:
     correction_prompt = f.read()
 
-def concise_transcription(transcription: str, client: Groq) -> str:
-    client = patch_client(client)
-    chat_completion = client.chat.completions.create(
-        response_model=ProcessedText,
-        model="llama3-70b-8192",
-        messages=[
-            {
-                "role": "system",
-                "content": concise_prompt.format(transcription)
-            }
-        ]
-    )
-    return chat_completion.processed_text
+def concise_transcription(transcription: str, base_model: str) -> str:
+    prompt = concise_prompt.format(transcription)
+    response = LLM(base_model).inference(prompt, ProcessedText)
+    return response.processed_text
 
-def highlight_keywords(transcription: str, client: Groq) -> str:
-    client = patch_client(client)
-    chat_completion = client.chat.completions.create(
-        response_model=ProcessedText,
-        model="llama3-70b-8192",
-        messages=[
-            {
-                "role": "system",
-                "content": highlight_prompt.format(transcription)
-            }
-        ]
-    )
-    print(json.loads(chat_completion.model_dump_json()))
-    return chat_completion.processed_text
+def highlight_keywords(transcription: str, base_model: str) -> str:
+    prompt = highlight_prompt.format(transcription)
+    response = LLM(base_model).inference(prompt, ProcessedText)
+    return response.processed_text
 
-def should_summarize(transcription: str, client: Groq) -> bool:
-    client = patch_client(client)
-    chat_completion = client.chat.completions.create(
-        response_model=ProcessingDecision,
-        model="llama3-70b-8192",
-        messages=[
-            {
-                "role": "system",
-                "content": decision_prompt.format(transcription)
-            }
-        ]
-    )
-    print(json.loads(chat_completion.model_dump_json()))
-    return chat_completion.decision
+def should_summarize(transcription: str, base_model: str) -> bool:
+    prompt = decision_prompt.format(transcription)
+    response = LLM(base_model).inference(prompt, ProcessingDecision)
+    return response.decision
 
-def correct_transcription(transcription: str, client: Groq) -> str:
-    chat_completion = client.chat.completions.create(
-        model="llama3-70b-8192",
-        messages=[
-            {
-                "role": "system",
-                "content": correction_prompt.format(transcription)
-            }
-        ]
-    )
-    return chat_completion.choices[0].message.content
+def correct_transcription(transcription: str, base_model: str) -> str:
+    prompt = correction_prompt.format(transcription)
+    response = LLM(base_model).inference(prompt, ProcessedText)
+    return response.processed_text
 
-def process_transcription(transcription: str, client: Groq) -> str:
-    if should_summarize(transcription, client):
-        response = concise_transcription(transcription, client)
+def process_transcription(transcription: str, base_model: str) -> str:
+    if should_summarize(transcription, base_model):
+        response = concise_transcription(transcription, base_model)
     else:
-        response = highlight_keywords(transcription, client)
+        response = highlight_keywords(transcription, base_model)
     print("Processed text:", response)
     if response == '0' or 0:
         return ""
