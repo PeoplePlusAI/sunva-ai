@@ -35,6 +35,8 @@ GROQ_API_KEY=your_api_key
 CLAUDE_API_KEY=your_api_key
 OPENAI_API_KEY=your_api_key
 BASE_MODEL=model_name (eg: Claude 3 Sonnet)
+SPEECH_BASE_MODEL=model_name (eg: Whisper Large)
+TTS_BASE_MODEL=model_name (eg: coqui-tacotron2)
 ```
 5. Run the POC
 ```

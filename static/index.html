@@ -208,14 +208,16 @@
         
         function sendTtsText(text) {
             let ttsSocket;
+            const jsonData = JSON.stringify({ text: text });  // Convert text to JSON format
+
             if (!ttsSocket || ttsSocket.readyState !== WebSocket.OPEN) {
                 ttsSocket = new WebSocket("ws://localhost:8000/v1/ws/speech");
                 ttsSocket.onopen = () => {
                     console.log("TTS WebSocket connected");
-                    ttsSocket.send(text);
+                    ttsSocket.send(jsonData);  // Send JSON data
                 };
             } else {
-                ttsSocket.send(text);
+                ttsSocket.send(jsonData);  // Send JSON data
             }
 
             ttsSocket.onmessage = (event) => {
