@@ -57,15 +57,11 @@ async def get_transcription(transcription_id: int, session: AsyncSession = Depen
 
 
 @router.websocket("/v1/ws/transcription")
-async def websocket_transcribe_and_process(
-    websocket: WebSocket
-):
+async def websocket_transcribe_and_process(websocket: WebSocket):
     await websocket.accept()
     user_id = websocket.client.host
 
-    # Initialize transcription and word count for this session
     full_transcription = ""
-    transcription = ""
     processed_transcription = ""
     word_count = 0
     audio_buffer = io.BytesIO()
@@ -75,67 +71,56 @@ async def websocket_transcribe_and_process(
         while True:
             data = await websocket.receive_text()
             message = json.loads(data)
-            if "language" in message:
-                language = message["language"]
-            else:
-                language = "en"
+            language = message.get("language", "en")
+            
             if "audio" in message:
                 audio_data = decode_audio_data(message)
                 audio_buffer.write(audio_data)
 
-                audio_filename = save_audio_to_file(audio_buffer)
-
-                partial_transcription = await asyncio.get_event_loop().run_in_executor(
-                    executor, speech_to_text, audio_filename, speech_base_model, language
-                )
-
+                # Reset buffer position to the beginning
                 audio_buffer.seek(0)
-                cleanup_audio_file(audio_filename)
 
-                transcription += partial_transcription + " "
-                full_transcription += partial_transcription + " "
-                word_count += len(partial_transcription.split())
+                async for partial_transcription in speech_to_text(audio_buffer, speech_base_model, language):
+                    full_transcription += partial_transcription + " "
+                    word_count += len(partial_transcription.split())
 
-                response = WebSocketResponse(transcription=partial_transcription)
-                await websocket.send_text(response.model_dump_json())
-
-                if word_count >= WORD_THRESHOLD:
-                    partial_processed_transcription = await asyncio.get_event_loop().run_in_executor(
-                        executor, process_transcription, transcription.strip(), llm_base_model
-                    )
-
-                    processed_transcription += partial_processed_transcription + " "
-                    word_count = 0
-
-                    # Store the transcription in Redis
-                    await redis_client.hset(f"transcription:{user_id}", mapping={
-                        "transcription": full_transcription.strip(),
-                        "processed_transcription": processed_transcription.strip()
-                    }) 
-
-                    response = WebSocketResponse(
-                        transcription=partial_transcription.strip(),
-                        processed_text=partial_processed_transcription.strip()
-                    )
+                    response = WebSocketResponse(transcription=partial_transcription)
                     await websocket.send_text(response.model_dump_json())
 
-                    transcription = ""
+                    if word_count >= WORD_THRESHOLD:
+                        partial_processed_transcription = await asyncio.get_event_loop().run_in_executor(
+                            executor, process_transcription, full_transcription.strip(), llm_base_model
+                        )
+
+                        processed_transcription += partial_processed_transcription + " "
+                        word_count = 0
+
+                        await redis_client.hset(f"transcription:{user_id}", mapping={
+                            "transcription": full_transcription.strip(),
+                            "processed_transcription": processed_transcription.strip()
+                        })
+
+                        response = WebSocketResponse(
+                            transcription=full_transcription.strip(),
+                            processed_text=partial_processed_transcription.strip()
+                        )
+                        await websocket.send_text(response.model_dump_json())
+
+                # Clear the buffer for the next chunk
+                audio_buffer = io.BytesIO()
 
     except WebSocketDisconnect:
         print(f"Client {user_id} disconnected")
-        # Handle disconnection gracefully
         await redis_client.hset(f"transcription:{user_id}", mapping={
             "transcription": full_transcription.strip(),
             "processed_transcription": processed_transcription.strip()
         })
     except Exception as e:
         traceback.print_exc()
-        # Handle errors
         await redis_client.hset(f"transcription:{user_id}", mapping={
             "transcription": full_transcription.strip(),
             "processed_transcription": processed_transcription.strip()
         })
-
 
 @router.post("/v1/transcription/save")
 async def save_transcription(user_id: str, session: AsyncSession = Depends(get_session)):
