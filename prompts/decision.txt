@@ -4,10 +4,6 @@ Analyze the given text and answer True or False based on whether we can summariz
 
 text: {}
 
-# Output format
-
-Return True if the text can be summarized and return False if it cannot be summarized.
-
 # Critieria
 
 Follow these steps to make your determination
@@ -20,6 +16,9 @@ Follow these steps to make your determination
 
 3. Based on your analysis, decide whether the text is suitable for summarization (True) or should be kept in its original form (False).
 
+# Output format
+
+Return True when the text can be summarized. Return False when the text cannot be summarized.
 
 # Examples
 
@@ -27,9 +26,19 @@ Text: Hey, how's it going? I just wanted to catch up and see what you've been up
 
 Response: True
 
-In this example, the text is casual conversation and can be easily summarized without losing important information, so the answer is True.
-
 Text: The purpose of this study was to investigate the effects of sleep deprivation on cognitive performance. A sample of 100 participants was divided into two groups: one that received a full night's sleep and another that stayed awake for 24 hours. The participants were then given a series of cognitive tasks to measure their performance. The results showed a significant decline in cognitive performance for the sleep-deprived group compared to the well-rested group. These findings suggest that adequate sleep is crucial for optimal cognitive functioning.
 
 Response: False
+
+In this example, the text contains important information about a study on sleep deprivation and its effects on cognitive performance. Summarizing this text may result in the loss of key details and findings, so it should be kept in its original form.
+
+Text: We are pleased to announce the launch of our new product line, which includes a range of innovative features and enhancements. Our team has worked tirelessly to develop these products, and we are excited to share them with our customers. The new product line will be available for purchase starting next month, and we are confident that it will meet the needs and expectations of our customers. Thank you for your continued support, and we look forward to your feedback on our new products.
+
+Response: False
+
+Text: The quick brown fox jumps over the lazy dog.
+
+Response: True
+
+
 

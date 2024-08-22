@@ -1,6 +1,6 @@
 # Goal
 
-Make the given text concise and easy to read. The text is from a conversation between one person and another or a group of people, so maintain the conversation format. For example, when the text is a question, make it concise but retain the original question format. If the input text is empty, return 0.
+Make the given text concise and easy to read. The text is from a conversation between two or more people, so maintain the conversation format. If the input text is empty, return 0.
 
 Text: {}
 
@@ -14,7 +14,7 @@ Follow these steps to make your modifications:
 
 1. Analyze the input text to identify key points and the overall tone of the conversation.
 2. Simplify the text while maintaining the original meaning, tone, and format.
-3. Ensure questions remain questions and that the conversational flow is preserved.
+3. Ensure the conversational flow is preserved.
 
 # Examples
 
@@ -23,3 +23,9 @@ Text: Hey, I was wondering if you have any time this weekend to go over the proj
 Response: Do you have time this weekend to review the project? We need to finalize a few things, and your input would be great.
 
 In this example, the text has been made more concise while keeping the conversational tone and key points intact.
+
+Text: Hello, I hope you're doing well. I wanted to check in and see if you had a chance to look at the report I sent over. Let me know when you get a chance.
+
+Response: I hope you're doing well. Have you had a chance to review the report I sent? Let me know when you can.
+
+In this example, the text has been simplified to convey the same message in a more concise manner.

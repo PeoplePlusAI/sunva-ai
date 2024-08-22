@@ -1,4 +1,3 @@
-import os
 from dotenv import load_dotenv
 from fastapi import (
     WebSocket, 
@@ -68,6 +67,7 @@ async def websocket_transcribe_and_process(
     user_id = websocket.client.host
 
     # Initialize transcription and word count for this session
+    full_transcription = ""
     transcription = ""
     processed_transcription = ""
     word_count = 0
@@ -92,42 +92,46 @@ async def websocket_transcribe_and_process(
                 cleanup_audio_file(audio_filename)
 
                 transcription += partial_transcription + " "
+                full_transcription += partial_transcription + " "
                 word_count += len(partial_transcription.split())
 
                 response = WebSocketResponse(transcription=partial_transcription)
                 await websocket.send_text(response.model_dump_json())
 
                 if word_count >= WORD_THRESHOLD:
-                    processed_text = await asyncio.get_event_loop().run_in_executor(
+                    partial_processed_transcription = await asyncio.get_event_loop().run_in_executor(
                         executor, process_transcription, transcription.strip(), base_model
                     )
 
-                    processed_transcription += processed_text + " "
+                    processed_transcription += partial_processed_transcription + " "
                     word_count = 0
 
                     # Store the transcription in Redis
                     await redis_client.hset(f"transcription:{user_id}", mapping={
-                        "transcription": transcription.strip(),
+                        "transcription": full_transcription.strip(),
                         "processed_transcription": processed_transcription.strip()
                     }) 
 
                     response = WebSocketResponse(
-                        transcription=transcription.strip(),
-                        processed_text=processed_transcription.strip()
+                        transcription=partial_transcription.strip(),
+                        processed_text=partial_processed_transcription.strip()
                     )
                     await websocket.send_text(response.model_dump_json())
+
+                    transcription = ""
+
     except WebSocketDisconnect:
         print(f"Client {user_id} disconnected")
         # Handle disconnection gracefully
         await redis_client.hset(f"transcription:{user_id}", mapping={
-            "transcription": transcription.strip(),
+            "transcription": full_transcription.strip(),
             "processed_transcription": processed_transcription.strip()
         })
     except Exception as e:
         traceback.print_exc()
         # Handle errors
         await redis_client.hset(f"transcription:{user_id}", mapping={
-            "transcription": transcription.strip(),
+            "transcription": full_transcription.strip(),
             "processed_transcription": processed_transcription.strip()
         })
 
