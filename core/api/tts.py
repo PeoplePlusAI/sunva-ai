@@ -6,17 +6,13 @@ from fastapi import (
 )
 from core.models.tts import TTSResponse
 from core.ai.speech import text_to_speech
-from core.utils.speech_utils import (
-    convert_audio_to_wav,
-    encode_wav_to_base64
-)
+from core.utils.speech_utils import encode_wav_to_base64
 from core.utils.executor_utils import executor
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.db.database import get_session
 from core.models.db import SpeechDB
 from core.db.redis_client import redis_client
 from dotenv import load_dotenv
-from groq import Groq
 import asyncio
 import base64
 import pickle
@@ -28,7 +24,7 @@ load_dotenv(
     dotenv_path="ops/.env"
 )
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+tts_model = os.getenv("TTS_BASE_MODEL", "coqui-tacotron2")
               
 router = APIRouter()
 
@@ -45,15 +41,26 @@ async def tts_websocket(
         await redis_client.delete(cache_key)  # Clear any existing data for this session
         
         while True:
-            text = await websocket.receive_text()
-            print(f"Received text for TTS: {text}")
+            message = await websocket.receive_text()
+            print(f"Received message: {message}")
+            message = json.loads(message)
 
-            audio_data = await asyncio.get_event_loop().run_in_executor(
-                executor, text_to_speech, text
-            )
+            if "language" in message:
+                language = message["language"]
+            else:
+                language = "en"
+            
+            if "text" in message:
+                text = message["text"]
+                print(f"Received text for TTS: {text}")
+
+                wav_data = await asyncio.get_event_loop().run_in_executor(
+                    executor, text_to_speech, text, tts_model, language
+                )
+            else:
+                wav_data = None
     
-            if audio_data is not None:
-                wav_data = convert_audio_to_wav(audio_data)
+            if wav_data:
                 wav_data_pickled = pickle.dumps(wav_data)
                 audio_base64 = encode_wav_to_base64(wav_data)
                 wav_data_base64 = base64.b64encode(wav_data_pickled).decode('utf-8')

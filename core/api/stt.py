@@ -21,10 +21,9 @@ from sqlmodel import select
 from core.models.db import TranscriptionDB
 from core.db.database import get_session
 from core.utils.executor_utils import executor
-from core.ai.speech import speech_to_text_groq
+from core.ai.speech import speech_to_text
 from core.ai.text import process_transcription
 from core.db.redis_client import redis_client
-from groq import Groq
 import traceback
 import asyncio
 import json
@@ -35,9 +34,9 @@ load_dotenv(
     dotenv_path="ops/.env"
 )
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+speech_base_model = os.getenv("SPEECH_BASE_MODEL", "Whisper Large")
 
-base_model = os.getenv("BASE_MODEL")
+llm_base_model = os.getenv("BASE_MODEL")
 
 router = APIRouter()
 
@@ -76,6 +75,10 @@ async def websocket_transcribe_and_process(
         while True:
             data = await websocket.receive_text()
             message = json.loads(data)
+            if "language" in message:
+                language = message["language"]
+            else:
+                language = "en"
             if "audio" in message:
                 audio_data = decode_audio_data(message)
                 audio_buffer.write(audio_data)
@@ -83,7 +86,7 @@ async def websocket_transcribe_and_process(
                 audio_filename = save_audio_to_file(audio_buffer)
 
                 partial_transcription = await asyncio.get_event_loop().run_in_executor(
-                    executor, speech_to_text_groq, audio_filename, client
+                    executor, speech_to_text, audio_filename, speech_base_model, language
                 )
 
                 audio_buffer.seek(0)
@@ -98,7 +101,7 @@ async def websocket_transcribe_and_process(
 
                 if word_count >= WORD_THRESHOLD:
                     partial_processed_transcription = await asyncio.get_event_loop().run_in_executor(
-                        executor, process_transcription, transcription.strip(), base_model
+                        executor, process_transcription, transcription.strip(), llm_base_model
                     )
 
                     processed_transcription += partial_processed_transcription + " "

@@ -1,39 +1,10 @@
-from groq import Groq
-from TTS.api import TTS
-from faster_whisper import WhisperModel
-import os
+from core.stt.stt import STT
+from core.tts.tts import TTS
 
 tts = TTS(model_name="tts_models/en/ljspeech/tacotron2-DDC")
 
-def speech_to_text_groq(audio_chunk: str, client: Groq) -> str:
-    transcription = client.audio.transcriptions.create(
-        file=(audio_chunk, 
-              open(audio_chunk, "rb").read()),
-        model="whisper-large-v3",
-        language="en",
-        prompt=""
-    )
-    return transcription.text
+def speech_to_text(audio_file: str, base_model: str, language: str) -> str:
+    return STT(base_model, language=language).transcribe(audio_file)
 
-
-model = WhisperModel(
-    "base",
-    device="cpu",
-    compute_type="int8",
-    cpu_threads=int(os.cpu_count() / 2),
-)
-
-def speech_to_text(audio_chunk, model):
-    segments, info = model.transcribe(
-        audio_chunk, beam_size=5
-    )
-    speech_text = " ".join(
-        [
-            segment.text for segment in segments
-        ]
-    )
-    return speech_text 
-
-def text_to_speech(text: str, tts: TTS=tts) -> list:
-    audio = tts.tts(text)
-    return audio
+def text_to_speech(text: str, base_model: str, language: str) -> bytes:
+    return TTS(model_name=base_model, language=language).speech(text)
