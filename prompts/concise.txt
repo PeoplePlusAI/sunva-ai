@@ -1,3 +1,25 @@
-Make the given text concise and easy to read. The text is from a conversation from one person to another or a set of people so keep the conversation format. For example when the text is a question make it concise but keep the original question format. Return only the modified text. Do not add content like this is the modified content to the result. If the input text is empty return 0. Do not request for a text. 
+# Goal
+
+Make the given text concise and easy to read. The text is from a conversation between one person and another or a group of people, so maintain the conversation format. For example, when the text is a question, make it concise but retain the original question format. If the input text is empty, return 0.
 
 Text: {}
+
+# Output format
+
+Return only the modified text without adding any additional content like "this is the modified content."
+
+# Criteria
+
+Follow these steps to make your modifications:
+
+1. Analyze the input text to identify key points and the overall tone of the conversation.
+2. Simplify the text while maintaining the original meaning, tone, and format.
+3. Ensure questions remain questions and that the conversational flow is preserved.
+
+# Examples
+
+Text: Hey, I was wondering if you have any time this weekend to go over the project? I think we need to finalize a few things, and it would be great to get your input.
+
+Response: Do you have time this weekend to review the project? We need to finalize a few things, and your input would be great.
+
+In this example, the text has been made more concise while keeping the conversational tone and key points intact.

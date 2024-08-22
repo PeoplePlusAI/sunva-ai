@@ -1,3 +1,35 @@
-Analyze the given text and answer True or False based on whether we can summarize this text for the user to read it faster. Text cannot be summarized if there is a high chance of losing important information in the given text when there are too much information in the text in such cases answer False.
+# Goal
+
+Analyze the given text and answer True or False based on whether we can summarize this text for the user to read it faster. Text cannot be summarized if there is a high chance of losing important information in the given text.
 
 text: {}
+
+# Output format
+
+Return True if the text can be summarized and return False if it cannot be summarized.
+
+# Critieria
+
+Follow these steps to make your determination
+
+1. Analyze the input text and identify the key topics and tone of the conversation (e.g., casual, professional, technical, etc).
+
+2. Consider the importance of the information:
+   - If it contains technical words or is work-related or educational, all important points should be retained.
+   - If it's casual conversation, it may be suitable for summarization.
+
+3. Based on your analysis, decide whether the text is suitable for summarization (True) or should be kept in its original form (False).
+
+
+# Examples
+
+Text: Hey, how's it going? I just wanted to catch up and see what you've been up to lately. Did you watch any good movies or TV shows recently? I've been binge-watching this new series on Netflix, and it's pretty addictive. Oh, and I tried that new restaurant downtown last weekend – the food was amazing! We should totally go there sometime. Anyway, let me know what's new with you!
+
+Response: True
+
+In this example, the text is casual conversation and can be easily summarized without losing important information, so the answer is True.
+
+Text: The purpose of this study was to investigate the effects of sleep deprivation on cognitive performance. A sample of 100 participants was divided into two groups: one that received a full night's sleep and another that stayed awake for 24 hours. The participants were then given a series of cognitive tasks to measure their performance. The results showed a significant decline in cognitive performance for the sleep-deprived group compared to the well-rested group. These findings suggest that adequate sleep is crucial for optimal cognitive functioning.
+
+Response: False
+
