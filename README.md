@@ -25,21 +25,26 @@ Please go through the [architecture diagram](https://www.figma.com/board/INrqk91
 ```
 poetry install
 ```
-3. Create a .env file inside ops dir and add the following variables
+3. Install Redis and start the server in the background
+```
+redis-server &
+```
+4. Create a .env file inside ops dir and add the following variables
 ```
 GROQ_API_KEY=your_api_key
 CLAUDE_API_KEY=your_api_key
 OPENAI_API_KEY=your_api_key
 BASE_MODEL=model_name (eg: Claude 3 Sonnet)
 ```
-4. Run the POC
+5. Run the POC
 ```
 uvicorn main:app --reload
 ```
-5. Open the browser and go to
+6. Open the browser and go to
 ```
 http://localhost:8000/
 ```
+
 ### Using Poetry installer
 
 1. Run this to enter virtual env

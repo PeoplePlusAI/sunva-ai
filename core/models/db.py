@@ -8,3 +8,10 @@ class TranscriptionDB(SQLModel, table=True):
     transcription: str
     processed_text: Optional[str] = None
     word_count: int = 0  # Adding word_count to the model
+
+
+class SpeechDB(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: str
+    audio: bytes
+    text: str = None
