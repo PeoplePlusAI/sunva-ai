@@ -1,8 +1,8 @@
-# SUNVA AI : Solving conversation problem for the deaf
+# SUNVA AI: Seamless conversation loop for the deaf
 
 ## About SUNVA AI
 
-Having conversations with the deaf can be a challenge. While there are so many live transcription and text to speech tools available in the market, they do not cater to the needs of the deaf and hard of hearing and aren't designed from accessibility focus. Often it could take a lot of time for the deaf person to read transcriptions and respond to them depending on various factors from person to person. SUNVA AI intelligently simplifies and provides various filters on the transcriptions to minimize the amount of time taken to read transcription and switch gaze between the screen and the person while having the communication..
+Having conversations with the deaf can be a challenge. While so many live transcription and text-to-speech tools are available in the market, they do not cater to the needs of the deaf and hard of hearing and aren't designed with an accessibility focus. Often it could take a lot of time for the deaf person to read transcriptions and respond to them depending on various factors from person to person. SUNVA AI intelligently simplifies and provides various filters on the transcriptions to minimize the time taken to read the transcription and switch gaze between the screen and the person while communicating.
 
 ## SUNVA AI workplan 
 
@@ -12,7 +12,7 @@ The [first version of the POC](https://www.figma.com/proto/xK0fvVJL9wRWTkwdBeRu2
 2. Text highlighting of important and critical keywords (transcript) using LLM
 3. Intelligently apply simplification/highlighting to the transcriptions and provide easy summarizations.
 
-Based on the user feedbacks from our focus groups, we will refine and add more features to the POC.
+Based on the user feedback from our focus groups, we will refine and add more features to the POC.
 
 ## SUNVA AI Architecture
 
@@ -66,8 +66,6 @@ There are few ways you can contribute to SUNVA AI.
 2. By raising issues in the issues section
 3. By contributing to the codebase based on the issues
 4. Join the SUNVA AI team by filling the [p+ai volunteer form](https://peopleplus.ai/volunteer) and select the SUNVA AI project.
-
-
 
 
 
