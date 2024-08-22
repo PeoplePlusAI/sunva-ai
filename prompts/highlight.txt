@@ -1,3 +1,33 @@
-Analyze the given text and find the important keywords in it. Put <b> in the beginning of each keyword and put </b> in the end of each keyword. Return only the modified text. Do not add any additional text. If no text is given just return 0. If there are no important words to highlight, return the original text.
+# Goal
+
+Analyze the given text and identify the important keywords. Highlight each keyword by enclosing it in `<b>` and `</b>`. If the input text is empty, return 0.
 
 Text: {}
+
+# Output format
+
+Return only the modified text with highlighted keywords. Do not add any additional content.
+
+# Criteria
+
+Follow these steps to highlight the keywords:
+
+1. Analyze the input text to determine the key points or important concepts.
+2. Enclose each identified keyword in `<b>` and `</b>`.
+3. Ensure the text remains readable and coherent after modification.
+
+# Examples
+
+Text: The purpose of this study was to investigate the effects of sleep deprivation on cognitive performance.
+
+Response: The purpose of this study was to investigate the effects of <b>sleep deprivation</b> on <b>cognitive performance</b>.
+
+Text: We are pleased to announce the launch of our new product line, which includes a range of innovative features and enhancements.
+
+Response: We are pleased to announce the launch of our new <b>product line</b>, which includes a range of innovative <b>features</b> and <b>enhancements</b>.
+
+Text: The quick brown fox jumps over the lazy dog.
+
+Response: The quick brown <b>fox</b> jumps over the lazy <b>dog</b>.
+
+
