@@ -12,6 +12,11 @@ app.include_router(tts.router)
 async def get():
     return FileResponse("static/index.html")
 
+
+@app.get("/is-alive")
+def is_alive():
+    return {"status": "alive"}
+
 @app.on_event("startup")
 async def on_startup():
     await init_db()
