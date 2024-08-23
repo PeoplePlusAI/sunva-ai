@@ -52,7 +52,7 @@ class BodhiSTT:
                     yield new_text  # Yield only the new part
 
                 if response_data.get("eos", False):
-                    break
+                    yield "<EOF>"
     async def transcribe(self, audio_file: str) -> str:
         with open(audio_file, "rb") as file:
             audio_buffer = io.BytesIO(file.read())

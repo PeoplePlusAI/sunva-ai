@@ -81,9 +81,29 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
                 # Reset buffer position to the beginning
                 audio_buffer.seek(0)
 
-                print("Received audio data chunk")
-
                 async for partial_transcription in speech_to_text(audio_buffer, speech_base_model, language):
+                    # Check for <EOF> signal
+                    if partial_transcription == "<EOF>":
+                        # Process the current candidate if EOF is detected
+                        if processing_candidate.strip():
+                            partial_processed_transcription = await asyncio.get_event_loop().run_in_executor(
+                                executor, process_transcription, processing_candidate.strip(), llm_base_model
+                            )
+                            processed_transcription += partial_processed_transcription + " "
+                            processing_candidate = ""
+                            word_count = 0
+
+                            await redis_client.hset(f"transcription:{user_id}", mapping={
+                                "transcription": full_transcription.strip(),
+                                "processed_transcription": processed_transcription.strip()
+                            })
+
+                            response = WebSocketResponse(
+                                processed_text=partial_processed_transcription.strip()
+                            )
+                            await websocket.send_text(response.model_dump_json())
+                        continue  # Skip the loop if EOF is detected
+
                     full_transcription += partial_transcription + " "
                     processing_candidate += partial_transcription + " "
                     word_count += len(partial_transcription.split())
@@ -109,19 +129,48 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
                             processed_text=partial_processed_transcription.strip()
                         )
                         await websocket.send_text(response.model_dump_json())
-                  
 
                 # Clear the buffer for the next chunk
                 audio_buffer = io.BytesIO()
 
     except WebSocketDisconnect:
         print(f"Client {user_id} disconnected")
+
+        # Process any remaining transcription
+        if processing_candidate.strip():
+            partial_processed_transcription = await asyncio.get_event_loop().run_in_executor(
+                executor, process_transcription, processing_candidate.strip(), llm_base_model
+            )
+            processed_transcription += partial_processed_transcription + " "
+
         await redis_client.hset(f"transcription:{user_id}", mapping={
             "transcription": full_transcription.strip(),
             "processed_transcription": processed_transcription.strip()
         })
+
     except Exception as e:
         traceback.print_exc()
+
+        # Process any remaining transcription in case of an exception
+        if processing_candidate.strip():
+            partial_processed_transcription = await asyncio.get_event_loop().run_in_executor(
+                executor, process_transcription, processing_candidate.strip(), llm_base_model
+            )
+            processed_transcription += partial_processed_transcription + " "
+
+        await redis_client.hset(f"transcription:{user_id}", mapping={
+            "transcription": full_transcription.strip(),
+            "processed_transcription": processed_transcription.strip()
+        })
+
+    finally:
+        # Final processing before closing
+        if processing_candidate.strip():
+            partial_processed_transcription = await asyncio.get_event_loop().run_in_executor(
+                executor, process_transcription, processing_candidate.strip(), llm_base_model
+            )
+            processed_transcription += partial_processed_transcription + " "
+
         await redis_client.hset(f"transcription:{user_id}", mapping={
             "transcription": full_transcription.strip(),
             "processed_transcription": processed_transcription.strip()
