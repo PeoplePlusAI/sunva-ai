@@ -109,6 +109,7 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
                             processed_text=partial_processed_transcription.strip()
                         )
                         await websocket.send_text(response.model_dump_json())
+                  
 
                 # Clear the buffer for the next chunk
                 audio_buffer = io.BytesIO()
