@@ -89,19 +89,22 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
                             partial_processed_transcription = await asyncio.get_event_loop().run_in_executor(
                                 executor, process_transcription, processing_candidate.strip(), llm_base_model
                             )
-                            processed_transcription += partial_processed_transcription + " "
-                            processing_candidate = ""
-                            word_count = 0
+                            if partial_processed_transcription:
+                                processed_transcription += partial_processed_transcription.get("processed_text") + " "
+                                processing_candidate = ""
+                                word_count = 0
 
-                            await redis_client.hset(f"transcription:{user_id}", mapping={
-                                "transcription": full_transcription.strip(),
-                                "processed_transcription": processed_transcription.strip()
-                            })
+                                await redis_client.hset(f"transcription:{user_id}", mapping={
+                                    "transcription": full_transcription.strip(),
+                                    "processed_transcription": processed_transcription.strip()
+                                })
 
-                            response = WebSocketResponse(
-                                processed_text=partial_processed_transcription.strip()
-                            )
-                            await websocket.send_text(response.model_dump_json())
+                                response = WebSocketResponse(
+                                    processed_text=partial_processed_transcription.get("processed_text").strip(),
+                                    original_text=partial_processed_transcription.get("original_text").strip(),
+                                    style=partial_processed_transcription.get("style")
+                                )
+                                await websocket.send_text(response.model_dump_json())
                         continue  # Skip the loop if EOF is detected
 
                     full_transcription += partial_transcription + " "
@@ -115,20 +118,23 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
                         partial_processed_transcription = await asyncio.get_event_loop().run_in_executor(
                             executor, process_transcription, processing_candidate.strip(), llm_base_model
                         )
+                        if partial_processed_transcription:
+                            processed_transcription += partial_processed_transcription.get("processed_text") + " "
+                            processing_candidate = ""
+                            word_count = 0
 
-                        processed_transcription += partial_processed_transcription + " "
-                        processing_candidate = ""
-                        word_count = 0
+                            await redis_client.hset(f"transcription:{user_id}", mapping={
+                                "transcription": full_transcription.strip(),
+                                "processed_transcription": processed_transcription.strip()
+                            })
 
-                        await redis_client.hset(f"transcription:{user_id}", mapping={
-                            "transcription": full_transcription.strip(),
-                            "processed_transcription": processed_transcription.strip()
-                        })
-
-                        response = WebSocketResponse(
-                            processed_text=partial_processed_transcription.strip()
-                        )
-                        await websocket.send_text(response.model_dump_json())
+                            response = WebSocketResponse(
+                                processed_text=partial_processed_transcription.get("processed_text").strip(),
+                                original_text=partial_processed_transcription.get("original_text").strip(),
+                                style=partial_processed_transcription.get("style")
+                            )
+                            print(response.model_dump_json())
+                            await websocket.send_text(response.model_dump_json())
 
                 # Clear the buffer for the next chunk
                 audio_buffer = io.BytesIO()
@@ -141,7 +147,7 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
             partial_processed_transcription = await asyncio.get_event_loop().run_in_executor(
                 executor, process_transcription, processing_candidate.strip(), llm_base_model
             )
-            processed_transcription += partial_processed_transcription + " "
+            processed_transcription += partial_processed_transcription.get("processed_text") + " "
 
         await redis_client.hset(f"transcription:{user_id}", mapping={
             "transcription": full_transcription.strip(),
@@ -156,7 +162,7 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
             partial_processed_transcription = await asyncio.get_event_loop().run_in_executor(
                 executor, process_transcription, processing_candidate.strip(), llm_base_model
             )
-            processed_transcription += partial_processed_transcription + " "
+            processed_transcription += partial_processed_transcription.get("processed_text") + " "
 
         await redis_client.hset(f"transcription:{user_id}", mapping={
             "transcription": full_transcription.strip(),
@@ -169,7 +175,7 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
             partial_processed_transcription = await asyncio.get_event_loop().run_in_executor(
                 executor, process_transcription, processing_candidate.strip(), llm_base_model
             )
-            processed_transcription += partial_processed_transcription + " "
+            processed_transcription += partial_processed_transcription.get("processed_text") + " "
 
         await redis_client.hset(f"transcription:{user_id}", mapping={
             "transcription": full_transcription.strip(),

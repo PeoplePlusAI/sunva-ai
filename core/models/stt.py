@@ -17,3 +17,5 @@ class SingleTranscriptionResponse(BaseModel):
 class WebSocketResponse(BaseModel):
     transcription: str = None
     processed_text: str = None
+    original_text: str = None
+    style: str = None

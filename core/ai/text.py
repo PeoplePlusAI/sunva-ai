@@ -39,13 +39,16 @@ def correct_transcription(transcription: str, base_model: str) -> str:
     response = LLM(base_model).inference(prompt, ProcessedText)
     return response.processed_text
 
-def process_transcription(transcription: str, base_model: str) -> str:
+def process_transcription(transcription: str, base_model: str) -> dict:
+    style = ""
     if should_summarize(transcription, base_model):
         response = concise_transcription(transcription, base_model)
+        style = "concise"
     else:
         response = highlight_keywords(transcription, base_model)
-    print("Processed text:", response)
-    if response == '0' or 0:
-        return ""
-    else:
-        return response
+        style = "highlight"
+    return {} if response == '0' or 0 else {
+        "original_text": transcription,
+        "processed_text": response,
+        "style": style
+    }

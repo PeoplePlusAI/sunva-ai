@@ -87,8 +87,10 @@
     - The server responds with the partial transcription and processed text:
       ```json
       {
-          "transcription": "Partial transcription text.",
-          "processed_text": "Processed transcription text."
+          "transcription": "Real time transcription text.",
+          "processed_text": "Processed transcription text.",
+          "original_text": "Original transcription chunk before processing.",
+          "style": "highlight"
       }
       ```
   - **Processing Logic**:
