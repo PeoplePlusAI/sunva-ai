@@ -5,6 +5,7 @@ import io
 tts = TTS(model_name="tts_models/en/ljspeech/tacotron2-DDC")
 
 async def speech_to_text(audio_buffer: io.BytesIO, base_model: str, language: str):
+    print(f"Base Model: {base_model}, Language: {language}")
     stt = STT(base_model, language=language)
     async for partial_transcription in stt.transcribe_stream(audio_buffer):
         yield partial_transcription

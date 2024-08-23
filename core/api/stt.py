@@ -62,6 +62,7 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
     user_id = websocket.client.host
 
     full_transcription = ""
+    processing_candidate = ""
     processed_transcription = ""
     word_count = 0
     audio_buffer = io.BytesIO()
@@ -80,8 +81,11 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
                 # Reset buffer position to the beginning
                 audio_buffer.seek(0)
 
+                print("Received audio data chunk")
+
                 async for partial_transcription in speech_to_text(audio_buffer, speech_base_model, language):
                     full_transcription += partial_transcription + " "
+                    processing_candidate += partial_transcription + " "
                     word_count += len(partial_transcription.split())
 
                     response = WebSocketResponse(transcription=partial_transcription)
@@ -89,10 +93,11 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
 
                     if word_count >= WORD_THRESHOLD:
                         partial_processed_transcription = await asyncio.get_event_loop().run_in_executor(
-                            executor, process_transcription, full_transcription.strip(), llm_base_model
+                            executor, process_transcription, processing_candidate.strip(), llm_base_model
                         )
 
                         processed_transcription += partial_processed_transcription + " "
+                        processing_candidate = ""
                         word_count = 0
 
                         await redis_client.hset(f"transcription:{user_id}", mapping={
@@ -101,7 +106,7 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
                         })
 
                         response = WebSocketResponse(
-                            transcription=full_transcription.strip(),
+                            transcription=partial_transcription.strip(),
                             processed_text=partial_processed_transcription.strip()
                         )
                         await websocket.send_text(response.model_dump_json())
