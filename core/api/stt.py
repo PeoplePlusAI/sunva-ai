@@ -35,7 +35,7 @@ load_dotenv(
 
 speech_base_model = os.getenv("SPEECH_BASE_MODEL", "Whisper Large")
 
-llm_base_model = os.getenv("BASE_MODEL")
+llm_base_model = os.getenv("BASE_MODEL", "GPT-4o")
 
 router = APIRouter()
 
