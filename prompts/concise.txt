@@ -1,6 +1,6 @@
 # Goal
 
-Make the given text concise and easy to read. The text is from a conversation between two or more people, so maintain the conversation format. If the input text is empty, return 0.
+Make the given text concise and easy to read. The text is from a conversation between two or more people, so maintain the conversation format.
 
 Text: {}
 

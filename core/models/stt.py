@@ -15,5 +15,6 @@ class SingleTranscriptionResponse(BaseModel):
     transcription: Transcription
 
 class WebSocketResponse(BaseModel):
-    transcription: str = None
-    processed_text: str = None
+    message_id: str
+    text: str
+    type: str

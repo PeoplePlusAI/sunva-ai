@@ -58,3 +58,11 @@ def save_audio_to_file(audio_buffer: io.BytesIO) -> str:
 def cleanup_audio_file(audio_filename: str):
     """Remove the temporary audio file."""
     os.remove(audio_filename)
+
+def generate_message_id() -> str:
+    """
+    Generates a unique message ID using UUID4.
+    Returns:
+        str: A unique message ID.
+    """
+    return str(uuid.uuid4())

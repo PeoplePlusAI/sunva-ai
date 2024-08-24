@@ -13,8 +13,7 @@ from core.models.stt import (
 )
 from core.utils.speech_utils import (
     decode_audio_data,
-    save_audio_to_file,
-    cleanup_audio_file
+    generate_message_id
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
@@ -67,6 +66,7 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
     word_count = 0
     audio_buffer = io.BytesIO()
     WORD_THRESHOLD = 30
+    message_id = None
 
     try:
         while True:
@@ -84,32 +84,43 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
                 print("Received audio data chunk")
 
                 async for partial_transcription in speech_to_text(audio_buffer, speech_base_model, language):
+                    if not message_id:
+                        message_id = generate_message_id()  # Ensure a new message_id is generated
+
                     full_transcription += partial_transcription + " "
                     processing_candidate += partial_transcription + " "
                     word_count += len(partial_transcription.split())
 
-                    response = WebSocketResponse(transcription=partial_transcription)
+                    response = WebSocketResponse(
+                        message_id=message_id,
+                        text=partial_transcription,
+                        type="transcription"
+                    )
                     await websocket.send_text(response.model_dump_json())
 
                     if word_count >= WORD_THRESHOLD:
-                        partial_processed_transcription = await asyncio.get_event_loop().run_in_executor(
+                        processed_result = await asyncio.get_event_loop().run_in_executor(
                             executor, process_transcription, processing_candidate.strip(), llm_base_model
                         )
+                        if "text" in processed_result:
+                            processed_transcription += processed_result["text"] + " "
+                            processing_candidate = ""
+                            word_count = 0
 
-                        processed_transcription += partial_processed_transcription + " "
-                        processing_candidate = ""
-                        word_count = 0
+                            await redis_client.hset(f"transcription:{user_id}", mapping={
+                                "transcription": full_transcription.strip(),
+                                "processed_transcription": processed_transcription.strip()
+                            })
 
-                        await redis_client.hset(f"transcription:{user_id}", mapping={
-                            "transcription": full_transcription.strip(),
-                            "processed_transcription": processed_transcription.strip()
-                        })
+                            response = WebSocketResponse(
+                                message_id=message_id,
+                                text=processed_result["text"],
+                                type=processed_result["type"]
+                            )
+                            await websocket.send_text(response.model_dump_json())
 
-                        response = WebSocketResponse(
-                            processed_text=partial_processed_transcription.strip()
-                        )
-                        await websocket.send_text(response.model_dump_json())
-                  
+                            # Reset message_id for the next round of transcription
+                            message_id = None
 
                 # Clear the buffer for the next chunk
                 audio_buffer = io.BytesIO()
