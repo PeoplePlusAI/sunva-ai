@@ -81,11 +81,43 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
                 # Reset buffer position to the beginning
                 audio_buffer.seek(0)
 
-                print("Received audio data chunk")
-
                 async for partial_transcription in speech_to_text(audio_buffer, speech_base_model, language):
+
                     if not message_id:
-                        message_id = generate_message_id()  # Ensure a new message_id is generated
+                        message_id = generate_message_id()
+                    # Check for <EOF> signal
+                    if partial_transcription == "<EOF>":
+                        # Process the current candidate if EOF is detected
+                        if processing_candidate.strip():
+                            processed_result = await asyncio.get_event_loop().run_in_executor(
+                                executor, 
+                                process_transcription, 
+                                processing_candidate.strip(), 
+                                llm_base_model
+                            )
+                            if "text" in processed_result:
+                                processed_transcription += processed_result["text"] + " "
+                                processing_candidate = ""
+                                word_count = 0
+
+                                await redis_client.hset(f"transcription:{user_id}", mapping={
+                                    "transcription": full_transcription.strip(),
+                                    "processed_transcription": processed_transcription.strip()
+                                })
+
+                                response = WebSocketResponse(
+                                    message_id=message_id,
+                                    text=processed_result["text"],
+                                    type=processed_result["type"]
+                                )
+                                await websocket.send_text(
+                                    response.model_dump_json()
+                                )
+
+                                # Reset message_id for the next round of transcription
+                                message_id = None
+
+                        continue  # Skip the loop if EOF is detected
 
                     full_transcription += partial_transcription + " "
                     processing_candidate += partial_transcription + " "
@@ -96,11 +128,16 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
                         text=partial_transcription,
                         type="transcription"
                     )
-                    await websocket.send_text(response.model_dump_json())
+                    await websocket.send_text(
+                        response.model_dump_json()
+                    )
 
                     if word_count >= WORD_THRESHOLD:
                         processed_result = await asyncio.get_event_loop().run_in_executor(
-                            executor, process_transcription, processing_candidate.strip(), llm_base_model
+                            executor, 
+                            process_transcription, 
+                            processing_candidate.strip(), 
+                            llm_base_model
                         )
                         if "text" in processed_result:
                             processed_transcription += processed_result["text"] + " "
@@ -117,7 +154,9 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
                                 text=processed_result["text"],
                                 type=processed_result["type"]
                             )
-                            await websocket.send_text(response.model_dump_json())
+                            await websocket.send_text(
+                                response.model_dump_json()
+                            )
 
                             # Reset message_id for the next round of transcription
                             message_id = None
@@ -127,12 +166,42 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
 
     except WebSocketDisconnect:
         print(f"Client {user_id} disconnected")
+
+        # Process any remaining transcription
+        if processing_candidate.strip():
+            processed_result = await asyncio.get_event_loop().run_in_executor(
+                executor, process_transcription, processing_candidate.strip(), llm_base_model
+            )
+            if processed_result:
+                processed_transcription += processed_result["text"] + " "
+                await redis_client.hset(f"transcription:{user_id}", mapping={
+                    "transcription": full_transcription.strip(),
+                    "processed_transcription": processed_transcription.strip()
+            })
+
+    except Exception as e:
+        traceback.print_exc()
+
+        # Process any remaining transcription in case of an exception
+        if processing_candidate.strip():
+            processed_result = await asyncio.get_event_loop().run_in_executor(
+                executor, process_transcription, processing_candidate.strip(), llm_base_model
+            )
+            processed_transcription += processed_result.get("text") + " "
+
         await redis_client.hset(f"transcription:{user_id}", mapping={
             "transcription": full_transcription.strip(),
             "processed_transcription": processed_transcription.strip()
         })
-    except Exception as e:
-        traceback.print_exc()
+
+    finally:
+        # Final processing before closing
+        if processing_candidate.strip():
+            processed_result = await asyncio.get_event_loop().run_in_executor(
+                executor, process_transcription, processing_candidate.strip(), llm_base_model
+            )
+            processed_transcription += processed_result.get("text") + " "
+
         await redis_client.hset(f"transcription:{user_id}", mapping={
             "transcription": full_transcription.strip(),
             "processed_transcription": processed_transcription.strip()
