@@ -84,11 +84,27 @@
       }
       ```
   - **Server to Client**:
-    - The server responds with the partial transcription and processed text:
+    - The server response for transcription:
       ```json
       {
-          "transcription": "Partial transcription text.",
-          "processed_text": "Processed transcription text."
+          "message_id": "<uuid>",
+          "text" : "This is a partial transcription.",
+          "type": "transcription"
+      }
+      ```
+    - The server response for processed text:
+      ```json
+      {
+          "message_id": "<uuid>",
+          "text" : "This is a processed text.",
+          "type": "concise"
+      }
+      ```
+      ```json
+      {
+          "message_id": "<uuid>",
+          "text" : "This is a <b>processed text</b>.",
+          "type": "highlight"
       }
       ```
   - **Processing Logic**:
