@@ -27,10 +27,10 @@ class GroqSTT:
 
         # Save audio buffer to a temporary file
         audio_file_name = save_audio_to_file(audio_buffer)
-
         # Preprocess the audio file to check if it is mostly silent
         if self.preprocess_audio(audio_file_name):
             yield "<EOF>"
+            self._cleanup_file(audio_file_name)
             return
 
         try:
@@ -43,8 +43,8 @@ class GroqSTT:
         
             yield partial_transcription.text
         finally:
-            # Cleanup the audio file after processing
-            os.remove(audio_file_name)
+            # Ensure the file is deleted
+            self._cleanup_file(audio_file_name)
 
     async def transcribe(self, audio_file: str) -> str:
         with open(audio_file, "rb") as file:
@@ -69,10 +69,9 @@ class GroqSTT:
         # Check if the audio is mostly silent
         return self.is_silent(audio_data, sample_rate)
     
-
     def is_silent(self, audio_data: np.ndarray, sample_rate: int, 
-                                  energy_threshold: float = 0.02,
-                                  silent_proportion_threshold: float = 0.75) -> bool:
+                  energy_threshold: float = 0.02,
+                  silent_proportion_threshold: float = 0.75) -> bool:
     
         # Convert audio data to float32 if it's not already
         if audio_data.dtype != np.float32 and audio_data.dtype != np.float64:
@@ -95,3 +94,10 @@ class GroqSTT:
         is_silent = proportion_low_energy >= silent_proportion_threshold
 
         return is_silent
+    
+    def _cleanup_file(self, file_path: str):
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        except Exception as e:
+            print(f"Failed to delete temporary audio file {file_path}: {e}")
