@@ -1,5 +1,8 @@
 import os
 import io
+import numpy as np
+import librosa
+import traceback
 from dotenv import load_dotenv
 from groq import AsyncGroq
 from core.utils.speech_utils import save_audio_to_file
@@ -13,48 +16,9 @@ class GroqSTT:
         self.model = model
         self.language = language
         self.accumulated_transcription = ""
-        self.silent_count = 0
         self.new_words_count = 0
         self.total_words = 0
-        self.SILENT_THRESHOLD = 5
-        self.NEW_WORDS_THRESHOLD = 5  # Number of new words considered to be silence
-        self.THANK_YOU_THRESHOLD = 3  # Number of repeated "thank you" to be considered as silence
-
-    def detect_repeated_thank_you(self, transcription: str) -> bool:
-        """
-        Detects repeated occurrences of 'thank you' in the transcription.
-        Returns True if 'thank you' is repeated more than the threshold times, indicating silence.
-        """
-        thank_you_count = transcription.lower().count("thank you")
-        return thank_you_count >= self.THANK_YOU_THRESHOLD
-
-    def process_transcription(self, transcription: str) -> str:
-        """
-        Processes the transcription to detect silence based on repeated 'thank you' 
-        and tracks new words. Returns <EOF> if silence is detected.
-        """
-        # Count the number of new words
-        words = transcription.split()
-        new_words = len(words)
-        self.new_words_count += new_words
-        self.total_words += new_words
-
-        # Accumulate the current transcription
-        self.accumulated_transcription += transcription + " "
-
-        # Check for repeated 'thank you' indicating silence
-        if self.detect_repeated_thank_you(self.accumulated_transcription):
-            self.silent_count += 1
-        else:
-            self.silent_count = 0
-
-        # If silence threshold is reached due to "thank you" or low new words, return <EOF>
-        if self.silent_count >= self.SILENT_THRESHOLD or self.new_words_count <= self.NEW_WORDS_THRESHOLD:
-            self.accumulated_transcription = ""  # Reset after detecting silence
-            self.new_words_count = 0  # Reset new words count
-            return "<EOF>"
-
-        return self.accumulated_transcription.strip()
+        self.previous_word_count = 0  # Track the word count from the previous transcription
 
     async def transcribe_stream(self, audio_buffer: io.BytesIO) -> str:
 
@@ -64,6 +28,11 @@ class GroqSTT:
         # Save audio buffer to a temporary file
         audio_file_name = save_audio_to_file(audio_buffer)
 
+        # Preprocess the audio file to check if it is mostly silent
+        if self.preprocess_audio(audio_file_name):
+            yield "<EOF>"
+            return
+
         try:
             partial_transcription = await self.client.audio.transcriptions.create(
                 file=(audio_file_name, open(audio_file_name, "rb").read()),
@@ -71,16 +40,9 @@ class GroqSTT:
                 language=self.language,
                 prompt=""
             )
+            print(partial_transcription.text)
         
-            # Post-process the transcription
-            result = self.process_transcription(partial_transcription.text)
-            
-            # If <EOF> is detected, return it as a signal to end processing
-            if result == "<EOF>":
-                yield "<EOF>"
-            else:
-                # Yield the processed transcription
-                yield result
+            yield partial_transcription.text
         finally:
             # Cleanup the audio file after processing
             os.remove(audio_file_name)
@@ -96,3 +58,49 @@ class GroqSTT:
             full_transcription += partial_transcription
 
         return full_transcription.strip()
+    
+    def preprocess_audio(self, audio_file_name: str) -> bool:
+        # Load audio data from the file
+        audio_data, sample_rate = librosa.load(audio_file_name, sr=None, mono=True)
+
+        # Debugging: Check the type and shape of the loaded audio data
+        if not isinstance(audio_data, np.ndarray):
+            raise ValueError(f"Expected audio_data to be a numpy.ndarray, but got {type(audio_data)}")
+        print(f"Audio data type: {type(audio_data)}, shape: {audio_data.shape}")
+
+        # Check if the audio is mostly silent
+        return self.is_silent(audio_data, sample_rate)
+    
+
+    def is_silent(self, audio_data: np.ndarray, sample_rate: int, 
+                                  energy_threshold: float = 0.02,
+                                  silent_proportion_threshold: float = 0.75) -> bool:
+    
+        # Convert audio data to float32 if it's not already
+        if audio_data.dtype != np.float32 and audio_data.dtype != np.float64:
+            audio_data = audio_data.astype(np.float32)
+    
+        print(f"Audio data type after conversion (if any): {audio_data.dtype}")
+
+        # Calculate STFT
+        try:
+            S = np.abs(librosa.stft(audio_data))
+        except Exception as e:
+            raise ValueError(f"STFT calculation failed: {e}")
+
+        # Calculate the energy of each frame
+        frame_energies = np.mean(S, axis=0)
+
+        # Proportion of frames with energy below the threshold
+        low_energy_frames = np.sum(frame_energies < energy_threshold)
+        proportion_low_energy = low_energy_frames / len(frame_energies)
+
+        # Debugging information
+        print(f"Total frames: {len(frame_energies)}, Low-energy frames: {low_energy_frames}")
+        print(f"Proportion of low-energy frames: {proportion_low_energy}")
+
+        # Determine if the audio is mostly silent based on the proportion of low-energy frames
+        is_silent = proportion_low_energy >= silent_proportion_threshold
+        print(f"Is Mostly Silent: {is_silent}")
+
+        return is_silent
