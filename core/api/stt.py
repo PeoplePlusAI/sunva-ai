@@ -36,7 +36,7 @@ load_dotenv(
 
 speech_base_model = os.getenv("SPEECH_BASE_MODEL", "Whisper Large")
 
-llm_base_model = os.getenv("BASE_MODEL", "Claude 2 Opus")
+llm_base_model = os.getenv("BASE_MODEL", "Claude 3 Opus")
 
 LLM.check_model(llm_base_model)
 
