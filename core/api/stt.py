@@ -38,7 +38,7 @@ speech_base_model = os.getenv("SPEECH_BASE_MODEL", "Whisper Large")
 
 llm_base_model = os.getenv("BASE_MODEL", "Claude 2 Opus")
 
-LLM().check_model(llm_base_model)
+LLM.check_model(llm_base_model)
 
 router = APIRouter()
 
@@ -92,6 +92,7 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
                     if partial_transcription == "<EOF>":
                         # Process the current candidate if EOF is detected
                         if processing_candidate.strip():
+                            print("Processing candidate", processing_candidate.strip())
                             processed_result = await asyncio.get_event_loop().run_in_executor(
                                 executor, 
                                 process_transcription, 
@@ -116,6 +117,7 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
                                 await websocket.send_text(
                                     response.model_dump_json()
                                 )
+                                print("Processed transcription sent", response.model_dump_json())
 
                                 # Reset message_id for the next round of transcription
                                 message_id = None

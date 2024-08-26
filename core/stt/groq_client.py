@@ -40,7 +40,6 @@ class GroqSTT:
                 language=self.language,
                 prompt=""
             )
-            print(partial_transcription.text)
         
             yield partial_transcription.text
         finally:
@@ -66,7 +65,6 @@ class GroqSTT:
         # Debugging: Check the type and shape of the loaded audio data
         if not isinstance(audio_data, np.ndarray):
             raise ValueError(f"Expected audio_data to be a numpy.ndarray, but got {type(audio_data)}")
-        print(f"Audio data type: {type(audio_data)}, shape: {audio_data.shape}")
 
         # Check if the audio is mostly silent
         return self.is_silent(audio_data, sample_rate)
@@ -79,8 +77,6 @@ class GroqSTT:
         # Convert audio data to float32 if it's not already
         if audio_data.dtype != np.float32 and audio_data.dtype != np.float64:
             audio_data = audio_data.astype(np.float32)
-    
-        print(f"Audio data type after conversion (if any): {audio_data.dtype}")
 
         # Calculate STFT
         try:
@@ -95,12 +91,7 @@ class GroqSTT:
         low_energy_frames = np.sum(frame_energies < energy_threshold)
         proportion_low_energy = low_energy_frames / len(frame_energies)
 
-        # Debugging information
-        print(f"Total frames: {len(frame_energies)}, Low-energy frames: {low_energy_frames}")
-        print(f"Proportion of low-energy frames: {proportion_low_energy}")
-
         # Determine if the audio is mostly silent based on the proportion of low-energy frames
         is_silent = proportion_low_energy >= silent_proportion_threshold
-        print(f"Is Mostly Silent: {is_silent}")
 
         return is_silent
