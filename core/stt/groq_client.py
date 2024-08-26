@@ -5,7 +5,7 @@ import librosa
 import traceback
 from dotenv import load_dotenv
 from groq import AsyncGroq
-from core.utils.speech_utils import save_audio_to_file
+from core.utils.speech_utils import save_audio_to_m4a_ffmpeg
 
 load_dotenv(dotenv_path="ops/.env")
 groq_api_key = os.getenv("GROQ_API_KEY")
@@ -26,7 +26,7 @@ class GroqSTT:
         audio_buffer.seek(0)
 
         # Save audio buffer to a temporary file
-        audio_file_name = save_audio_to_file(audio_buffer)
+        audio_file_name = save_audio_to_m4a_ffmpeg(audio_buffer)
 
         # Preprocess the audio file to check if it is mostly silent
         if self.preprocess_audio(audio_file_name):
@@ -59,6 +59,7 @@ class GroqSTT:
 
         return full_transcription.strip()
     
+
     def preprocess_audio(self, audio_file_name: str) -> bool:
         # Load audio data from the file
         audio_data, sample_rate = librosa.load(audio_file_name, sr=None, mono=True)
@@ -100,7 +101,13 @@ class GroqSTT:
         print(f"Proportion of low-energy frames: {proportion_low_energy}")
 
         # Determine if the audio is mostly silent based on the proportion of low-energy frames
-        is_silent = proportion_low_energy >= silent_proportion_threshold
+        is_silent = ""
+        if (proportion_low_energy >= silent_proportion_threshold):
+            is_silent = True
+        elif (proportion_low_energy >= 0.20):
+            is_silent = False
+        elif (proportion_low_energy == 0.0):
+            is_silent = True
         print(f"Is Mostly Silent: {is_silent}")
 
         return is_silent

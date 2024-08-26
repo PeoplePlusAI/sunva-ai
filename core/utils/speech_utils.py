@@ -6,6 +6,7 @@ import base64
 import asyncio
 import io
 import os
+import subprocess
 
 def float32_to_int16(audio_array):
     """Scale float32 array to int16."""
@@ -45,6 +46,7 @@ def decode_audio_data(message: dict) -> bytes:
     audio_base64 = message["audio"]
     return base64.b64decode(audio_base64)
 
+
 def save_audio_to_file(audio_buffer: io.BytesIO) -> str:
     """Save the audio buffer to a temporary WAV file."""
     audio_filename = f"temp_{uuid.uuid4().hex}.wav"
@@ -53,6 +55,22 @@ def save_audio_to_file(audio_buffer: io.BytesIO) -> str:
         wf.setsampwidth(2)
         wf.setframerate(16000)
         wf.writeframes(audio_buffer.getvalue())
+    return audio_filename
+
+def save_audio_to_m4a_ffmpeg(audio_buffer: io.BytesIO) -> str:
+    """Save the audio buffer to a temporary M4A file using FFmpeg."""
+    audio_filename = f"temp_{uuid.uuid4().hex}.m4a"
+
+    # Write the BytesIO buffer to a temporary WAV file
+    with open("temp.wav", "wb") as temp_wav:
+        temp_wav.write(audio_buffer.getvalue())
+
+    # Use FFmpeg to convert the WAV file to M4A
+    subprocess.run(["ffmpeg", "-i", "temp.wav", audio_filename, "-y"], check=True)
+
+    # Optionally, remove the temporary WAV file
+    os.remove("temp_*.wav")
+
     return audio_filename
 
 def cleanup_audio_file(audio_filename: str):

@@ -28,6 +28,7 @@ import asyncio
 import json
 import io
 import os
+import time
 
 load_dotenv(
     dotenv_path="ops/.env"
@@ -35,7 +36,7 @@ load_dotenv(
 
 speech_base_model = os.getenv("SPEECH_BASE_MODEL", "Whisper Large")
 
-llm_base_model = os.getenv("BASE_MODEL", "Claude 2 Opus")
+llm_base_model = os.getenv("BASE_MODEL", "Claude 3 Opus")
 
 router = APIRouter()
 
@@ -70,7 +71,11 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
 
     try:
         while True:
+            start_time = time.time()
             data = await websocket.receive_text()
+            receive_latency = time.time() - start_time
+            print(f"Receive latency: {receive_latency:.4f} seconds")  # Log receive latency
+
             message = json.loads(data)
             language = message.get("language", "en")
             
