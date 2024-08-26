@@ -7,6 +7,7 @@ import asyncio
 import io
 import os
 import subprocess
+import librosa
 
 def float32_to_int16(audio_array):
     """Scale float32 array to int16."""
@@ -86,3 +87,26 @@ def generate_message_id() -> str:
         str: A unique message ID.
     """
     return str(uuid.uuid4())
+
+
+def is_silent(audio_data: np.ndarray, energy_threshold: float = 0.02, silent_proportion_threshold: float = 0.75) -> bool:
+    # Convert audio data to float32 if it's not already
+    if audio_data.dtype != np.float32 and audio_data.dtype != np.float64:
+        audio_data = audio_data.astype(np.float32)
+
+    # Calculate STFT
+    try:
+        S = np.abs(librosa.stft(audio_data))
+    except Exception as e:
+        raise ValueError(f"STFT calculation failed: {e}")
+
+    # Calculate the energy of each frame
+    frame_energies = np.mean(S, axis=0)
+
+    # Proportion of frames with energy below the threshold
+    low_energy_frames = np.sum(frame_energies < energy_threshold)
+    proportion_low_energy = low_energy_frames / len(frame_energies)
+
+    # Determine if the audio is mostly silent based on the proportion of low-energy frames
+    is_silent = proportion_low_energy >= silent_proportion_threshold or proportion_low_energy == 0.0
+    return is_silent
