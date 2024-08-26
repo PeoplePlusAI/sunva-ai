@@ -42,6 +42,15 @@ class LLM:
     def list_models(self):
         return self.models
     
+    def check_model(self, model_name: str):
+        # raise an error if the selected model is not available
+        model_enum, model_id = self.model_enum(model_name)  # Now use `self` instead of `cls`
+        if model_enum is None:
+            available_models = [
+                model[0] for model_enum, models in self.models.items() for model in models
+            ]
+            raise ValueError(f"Unsupported model: {model_name}\n Available models: {available_models}")
+    
     def model_enum(self, model_name: str) -> Tuple[str, str]:
         model_dict = {
             model[0]: (model_enum, model[1]) 
@@ -59,5 +68,5 @@ class LLM:
         elif model_enum == "CLAUDE":
             return Claude().inference(model_id, prompt, response_model)
         else:
-            return "Model not found"
+            raise ValueError(f"Unsupported model: {self.model_id}")
         

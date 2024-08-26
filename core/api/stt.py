@@ -23,6 +23,7 @@ from core.utils.executor_utils import executor
 from core.ai.speech import speech_to_text
 from core.ai.text import process_transcription
 from core.db.redis_client import redis_client
+from core.llm.llm import LLM
 import traceback
 import asyncio
 import json
@@ -36,6 +37,8 @@ load_dotenv(
 speech_base_model = os.getenv("SPEECH_BASE_MODEL", "Whisper Large")
 
 llm_base_model = os.getenv("BASE_MODEL", "Claude 2 Opus")
+
+LLM().check_model(llm_base_model)
 
 router = APIRouter()
 
