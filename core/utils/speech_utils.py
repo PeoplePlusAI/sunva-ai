@@ -69,7 +69,9 @@ def save_audio_to_m4a_ffmpeg(audio_buffer: io.BytesIO) -> str:
     subprocess.run(["ffmpeg", "-i", "temp.wav", audio_filename, "-y"], check=True)
 
     # Optionally, remove the temporary WAV file
-    os.remove("temp_*.wav")
+    if os.path.exists("temp_*.wav"):
+        os.remove("temp.wav")
+
 
     return audio_filename
 

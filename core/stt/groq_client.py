@@ -2,7 +2,7 @@ import os
 import io
 import numpy as np
 import librosa
-import traceback
+import uuid
 from dotenv import load_dotenv
 from groq import AsyncGroq
 from core.utils.speech_utils import save_audio_to_m4a_ffmpeg
@@ -26,16 +26,16 @@ class GroqSTT:
         audio_buffer.seek(0)
 
         # Save audio buffer to a temporary file
-        audio_file_name = save_audio_to_m4a_ffmpeg(audio_buffer)
-
+        # audio_file_name = save_audio_to_m4a_ffmpeg(audio_buffer)
+        audio_file_name = f"temp_{uuid.uuid4().hex}.m4a"
         # Preprocess the audio file to check if it is mostly silent
-        if self.preprocess_audio(audio_file_name):
-            yield "<EOF>"
-            return
+        # if self.is_silent_scipy(audio_buffer):
+        #     yield "<EOF>"
+        #     return
 
         try:
             partial_transcription = await self.client.audio.transcriptions.create(
-                file=(audio_file_name, open(audio_file_name, "rb").read()),
+                file=(audio_file_name, audio_buffer.read()),
                 model=self.model,
                 language=self.language,
                 prompt=""
@@ -43,9 +43,12 @@ class GroqSTT:
             print(partial_transcription.text)
         
             yield partial_transcription.text
-        finally:
-            # Cleanup the audio file after processing
-            os.remove(audio_file_name)
+        except:
+            print("exception")
+        # finally:
+        #     # Cleanup the audio file after processing
+        #     # os.remove(audio_file_name)
+        #     print("finally")
 
     async def transcribe(self, audio_file: str) -> str:
         with open(audio_file, "rb") as file:
@@ -71,11 +74,10 @@ class GroqSTT:
 
         # Check if the audio is mostly silent
         return self.is_silent(audio_data, sample_rate)
-    
 
-    def is_silent(self, audio_data: np.ndarray, sample_rate: int, 
-                                  energy_threshold: float = 0.02,
-                                  silent_proportion_threshold: float = 0.75) -> bool:
+    def is_silent(self, audio_data: np.ndarray, 
+                        energy_threshold: float = 0.02,
+                        silent_proportion_threshold: float = 0.75) -> bool:
     
         # Convert audio data to float32 if it's not already
         if audio_data.dtype != np.float32 and audio_data.dtype != np.float64:
