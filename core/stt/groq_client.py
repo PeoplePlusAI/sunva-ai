@@ -7,7 +7,7 @@ import traceback
 from dotenv import load_dotenv
 from groq import AsyncGroq
 from pydub import AudioSegment
-from utils.speech_utils import is_silent
+from core.utils.speech_utils import is_silent
 
 load_dotenv(dotenv_path="ops/.env")
 groq_api_key = os.getenv("GROQ_API_KEY")
