@@ -32,3 +32,4 @@ sqlmodel = "0.0.21"
 aiosqlite = '0.20.0'
 anthropic = "0.34.1"
 openai = "1.41.1"
+librosa = "0.10.2.post1"

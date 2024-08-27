@@ -27,7 +27,6 @@ class TTS:
 
     def speech(self, text: str) -> bytes:
         model_enum, model_name = self.model_enum(self.model)
-        print(f"Model Enum: {model_enum}, Model Name: {model_name}")
         if model_enum == "coqui":
             return CoquiTTS(model_name, language=self.language).speech(text)
         else:

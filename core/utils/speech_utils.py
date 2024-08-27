@@ -6,6 +6,8 @@ import base64
 import asyncio
 import io
 import os
+import subprocess
+import librosa
 
 def float32_to_int16(audio_array):
     """Scale float32 array to int16."""
@@ -45,6 +47,7 @@ def decode_audio_data(message: dict) -> bytes:
     audio_base64 = message["audio"]
     return base64.b64decode(audio_base64)
 
+
 def save_audio_to_file(audio_buffer: io.BytesIO) -> str:
     """Save the audio buffer to a temporary WAV file."""
     audio_filename = f"temp_{uuid.uuid4().hex}.wav"
@@ -55,6 +58,55 @@ def save_audio_to_file(audio_buffer: io.BytesIO) -> str:
         wf.writeframes(audio_buffer.getvalue())
     return audio_filename
 
+def save_audio_to_m4a_ffmpeg(audio_buffer: io.BytesIO) -> str:
+    """Save the audio buffer to a temporary M4A file using FFmpeg."""
+    audio_filename = f"temp_{uuid.uuid4().hex}.m4a"
+
+    # Write the BytesIO buffer to a temporary WAV file
+    with open("temp.wav", "wb") as temp_wav:
+        temp_wav.write(audio_buffer.getvalue())
+
+    # Use FFmpeg to convert the WAV file to M4A
+    subprocess.run(["ffmpeg", "-i", "temp.wav", audio_filename, "-y"], check=True)
+
+    # Optionally, remove the temporary WAV file
+    if os.path.exists("temp_*.wav"):
+        os.remove("temp.wav")
+
+
+    return audio_filename
+
 def cleanup_audio_file(audio_filename: str):
     """Remove the temporary audio file."""
     os.remove(audio_filename)
+
+def generate_message_id() -> str:
+    """
+    Generates a unique message ID using UUID4.
+    Returns:
+        str: A unique message ID.
+    """
+    return str(uuid.uuid4())
+
+
+def is_silent(audio_data: np.ndarray, energy_threshold: float = 0.02, silent_proportion_threshold: float = 0.75) -> bool:
+    # Convert audio data to float32 if it's not already
+    if audio_data.dtype != np.float32 and audio_data.dtype != np.float64:
+        audio_data = audio_data.astype(np.float32)
+
+    # Calculate STFT
+    try:
+        S = np.abs(librosa.stft(audio_data))
+    except Exception as e:
+        raise ValueError(f"STFT calculation failed: {e}")
+
+    # Calculate the energy of each frame
+    frame_energies = np.mean(S, axis=0)
+
+    # Proportion of frames with energy below the threshold
+    low_energy_frames = np.sum(frame_energies < energy_threshold)
+    proportion_low_energy = low_energy_frames / len(frame_energies)
+
+    # Determine if the audio is mostly silent based on the proportion of low-energy frames
+    is_silent = proportion_low_energy >= silent_proportion_threshold or proportion_low_energy == 0.0
+    return is_silent

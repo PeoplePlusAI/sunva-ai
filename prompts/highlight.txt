@@ -1,6 +1,6 @@
 # Goal
 
-Analyze the given text and identify the important keywords. Highlight each keyword by enclosing it in `<b>` and `</b>`. If the input text is empty, return 0.
+Analyze the given text and identify the important keywords. Highlight each keyword by enclosing it in `<b>` and `</b>`.
 
 Text: {}
 

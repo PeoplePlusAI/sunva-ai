@@ -1,6 +1,6 @@
 from .database import engine
 from sqlmodel import SQLModel
-from core.models.db import TranscriptionDB
+# from core.models.db import TranscriptionDB
 
 # Initialize the database by creating tables
 async def init_db():

@@ -23,9 +23,6 @@
             box-sizing: border-box;
             overflow-y: auto;
         }
-        .column:first-child {
-            border-right: 1px solid #ccc;
-        }
         h2 {
             text-align: center;
         }
@@ -67,10 +64,6 @@
             <h2>Transcription</h2>
             <pre id="transcription"></pre>
         </div>
-        <div class="column">
-            <h2>Processed Text</h2>
-            <pre id="processed-text"></pre>
-        </div>
     </div>
     <div class="tts-section">
         <h2>Text-to-Speech</h2>
@@ -82,6 +75,7 @@
         let recorder;
         const audioQueue = [];
         let isSending = false;
+        const transcriptionMap = {};
 
         async function startRecording() {
             try {
@@ -115,7 +109,9 @@
             console.log('Stopping recording...');
             if (recorder && recorder.getState() !== 'inactive') {
                 recorder.stopRecording(() => {
-                    sendAudioChunks();
+                    console.log('Recording stopped');
+                    recorder.destroy(); // Clean up the recorder
+                    recorder = null;
                 });
             }
         }
@@ -146,10 +142,6 @@
             return window.btoa(binary);
         }
 
-        function formatProcessedText(text) {
-            return text.replace(/\*(.*?)\*/g, '<b>$1</b>');
-        }
-
         function startTranscriptionAndProcessing() {
             transcribeAndProcessSocket = new WebSocket("ws://localhost:8000/v1/ws/transcription");
 
@@ -162,12 +154,7 @@
 
             transcribeAndProcessSocket.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                if (data.transcription) {
-                    document.getElementById('transcription').textContent += data.transcription + " ";
-                }
-                if (data.processed_text) {
-                    document.getElementById('processed-text').innerHTML += formatProcessedText(data.processed_text) + "\n";
-                }
+                handleWebSocketMessage(data);
             };
 
             transcribeAndProcessSocket.onclose = () => {
@@ -178,11 +165,44 @@
             };
         }
 
-        function stopTranscriptionAndProcessing() {
-            if (transcribeAndProcessSocket) {
-                transcribeAndProcessSocket.close();
+        function handleWebSocketMessage(data) {
+            const transcriptionElement = document.getElementById('transcription');
+
+            if (data.type === "transcription") {
+                // Append the transcription text with the message_id as a reference
+                if (!transcriptionMap[data.message_id]) {
+                    transcriptionMap[data.message_id] = document.createElement('div');
+                    transcriptionMap[data.message_id].textContent = data.text + " ";
+                    transcriptionElement.appendChild(transcriptionMap[data.message_id]);
+                } else {
+                    transcriptionMap[data.message_id].textContent += data.text + " ";
+                }
+            } else if (data.type === "concise" || data.type === "highlight") {
+                // Replace the content for the corresponding message_id with processed text
+                if (transcriptionMap[data.message_id]) {
+                    transcriptionMap[data.message_id].textContent = data.text;
+                }
             }
-            stopRecording();
+        }
+
+        function stopTranscriptionAndProcessing() {
+            console.log('Stopping transcription and processing...');
+            if (recorder && recorder.getState() !== 'inactive') {
+                recorder.stopRecording(() => {
+                    console.log('Recording stopped');
+                    recorder.destroy(); // Clean up the recorder
+                    recorder = null;
+                });
+            }
+
+            if (transcribeAndProcessSocket && transcribeAndProcessSocket.readyState === WebSocket.OPEN) {
+                transcribeAndProcessSocket.close(); // Close the WebSocket connection
+                console.log('WebSocket connection closed');
+            }
+
+            // Update button visibility
+            document.getElementById('start-button').style.display = 'block';
+            document.getElementById('stop-button').style.display = 'none';
         }
 
         document.getElementById('start-button').addEventListener('click', startTranscriptionAndProcessing);
