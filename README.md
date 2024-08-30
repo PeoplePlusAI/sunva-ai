@@ -2,7 +2,18 @@
 
 ## About SUNVA AI
 
-Having conversations leveraging existing communication tools can be a challenge for deafs. While so many live transcription and text-to-speech tools are available in the market, they do not cater to the needs of the deaf and hard of hearing and aren't designed with an accessibility focus. Often it could take a lot of time for the deaf person to read transcriptions and respond to them depending on various factors from person to person. SUNVA AI intelligently simplifies and provides various filters on the transcriptions to minimize the time taken to read the transcription and switch gaze between the screen and the person while communicating.
+Having conversations leveraging existing communication tools can be a challenge for deafs. While so many live transcription and text-to-speech tools are available in the market, they do not cater to the needs of the deaf and hard of hearing and aren't designed with an accessibility focus. 
+
+We are building this focusing on the problem deaf people are facing in India by building prototypes, testing it with the deaf community, and iterating based on the feedback.
+
+### STT 
+
+Often it could take a lot of time for the deaf person to read transcriptions and respond to them depending on various factors from person to person. SUNVA AI intelligently simplifies and provides various filters on the transcriptions to minimize the time taken to read the transcription and switch gaze between the screen and the person while communicating.
+
+### TTS
+
+SUNVA AI provides a text-to-speech + LLM layer features that help the deaf person having speech irregularities to type less and respond more. For example, if the deaf person types "I coffee", SUNVA AI will convert it to "I would like to have a coffee" and speak it out.
+
 
 ## SUNVA AI workplan 
 
