@@ -23,11 +23,8 @@ import os
 load_dotenv(
     dotenv_path="ops/.env"
 )
-
-tts_model = os.getenv("TTS_BASE_MODEL", "coqui-tacotron2")
               
 router = APIRouter()
-
 
 @router.websocket("/v1/ws/speech")
 async def tts_websocket(
@@ -35,6 +32,14 @@ async def tts_websocket(
     session: AsyncSession = Depends(get_session)
 ):
     await websocket.accept()
+
+    # Retrieve the selected language from Redis
+    selected_language = await redis_client.hget(f"user:{user_id}", "language")
+    if not selected_language:
+        selected_language = "en"  # Default to English if no language is selected
+    else:
+        selected_language = selected_language.decode("utf-8")  # Convert bytes to string
+
     try:
         user_id = websocket.client.host
         cache_key = f"tts_session:{user_id}"
@@ -55,7 +60,7 @@ async def tts_websocket(
                 print(f"Received text for TTS: {text}")
 
                 wav_data = await asyncio.get_event_loop().run_in_executor(
-                    executor, text_to_speech, text, tts_model, language
+                    executor, text_to_speech, text, selected_language
                 )
             else:
                 wav_data = None

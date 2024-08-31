@@ -19,19 +19,19 @@ with open("prompts/decision.txt", "r") as f:
 with open("prompts/correction.txt", "r") as f:
     correction_prompt = f.read()
 
-def concise_transcription(transcription: str, base_model: str) -> str:
+def concise_transcription(transcription: str, language: str) -> str:
     prompt = concise_prompt.format(transcription)
-    response = LLM(base_model).inference(prompt, ProcessedText)
+    response = LLM(language).inference(prompt, ProcessedText)
     return response.processed_text
 
-def highlight_keywords(transcription: str, base_model: str) -> str:
+def highlight_keywords(transcription: str, language: str) -> str:
     prompt = highlight_prompt.format(transcription)
-    response = LLM(base_model).inference(prompt, ProcessedText)
+    response = LLM(language).inference(prompt, ProcessedText)
     return response.processed_text
 
-def should_summarize(transcription: str, base_model: str) -> bool:
+def should_summarize(transcription: str, language: str) -> bool:
     prompt = decision_prompt.format(transcription)
-    response = LLM(base_model).inference(prompt, ProcessingDecision)
+    response = LLM(language).inference(prompt, ProcessingDecision)
     return response.decision
 
 def correct_transcription(transcription: str, base_model: str) -> str:
@@ -39,11 +39,11 @@ def correct_transcription(transcription: str, base_model: str) -> str:
     response = LLM(base_model).inference(prompt, ProcessedText)
     return response.processed_text
 
-def process_transcription(transcription: str, base_model: str) -> str:
-    if should_summarize(transcription, base_model):
-        response = concise_transcription(transcription, base_model)
+def process_transcription(transcription: str, language: str) -> str:
+    if should_summarize(transcription, language):
+        response = concise_transcription(transcription, language)
         type = "concise"
     else:
-        response = highlight_keywords(transcription, base_model)
+        response = highlight_keywords(transcription, language)
         type = "highlight"
     return {"text": response, "type": type} if response else {} 

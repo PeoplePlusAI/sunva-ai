@@ -2,33 +2,27 @@ from core.tts.coqui_client import CoquiTTS
 from typing import Tuple
 
 class TTS:
-    def __init__(self, model_name: str, language: str = "en"):
-        self.model = model_name
+    def __init__(self, language: str = "en"):
         self.language = language
         self.models = {
-            "coqui": [
-                ("coqui-tacotron2", "tts_models/en/ljspeech/tacotron2-DDC"),
-                ("coqui-glow-tts", "tts_models/en/ljspeech/glow-tts"),
-                ("coqui-waveglow", "tts_models/en/ljspeech/waveglow"),
-            ]
+            "coqui": {
+                "en": "tts_models/en/ljspeech/tacotron2-DDC",  # Default English model
+                # Add more language mappings here
+            }
         }
+        self.model_id, self.model_enum = self._select_model()
+
+    def _select_model(self) -> Tuple[str, str]:
+        for model_enum, lang_models in self.models.items():
+            if self.language in lang_models:
+                return lang_models[self.language], model_enum
+        raise ValueError(f"Unsupported language: {self.language}")
 
     def list_models(self):
         return self.models
     
-    def model_enum(self, model_name: str) -> Tuple[str, str]:
-        model_dict = {
-            model[0]: (model_enum, model[1]) 
-            for model_enum, models in self.models.items() 
-            for model in models
-        }
-        return model_dict.get(model_name, (None, None))
-    
-
     def speech(self, text: str) -> bytes:
-        model_enum, model_name = self.model_enum(self.model)
-        if model_enum == "coqui":
-            return CoquiTTS(model_name, language=self.language).speech(text)
+        if self.model_enum == "coqui":
+            return CoquiTTS(self.model_id, language=self.language).speech(text)
         else:
             return None
-        
