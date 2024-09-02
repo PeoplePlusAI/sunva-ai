@@ -14,8 +14,10 @@
     }
     ```
 
+---
+
 ### 2. Get All Transcriptions
-- **Endpoint**: `GET /transcriptions`
+- **Endpoint**: `GET /v1/transcriptions`
 - **Description**: Retrieve a list of all transcriptions stored in the database.
 - **Response**:
   - **Status Code**: `200 OK`
@@ -42,7 +44,7 @@
 ---
 
 ### 3. Get Transcription by ID
-- **Endpoint**: `GET /transcriptions/{transcription_id}`
+- **Endpoint**: `GET /v1/transcriptions/{transcription_id}`
 - **Description**: Retrieve a specific transcription by its ID.
 - **Path Parameters**:
   - `transcription_id` (int): The ID of the transcription to retrieve.
@@ -167,5 +169,64 @@
     - At the end of the session, the cached data is persisted to the database, and the cache is cleared.
   - **WebSocket Closure**:
     - When the client disconnects, the server saves the cached TTS data to the database and clears the cache.
+
+---
+
+### 6. Get all available languages
+- **Endpoint**: `GET /v1/languages`
+- **Description**: Retrieve a list of all available languages for transcription and TTS processing.
+
+- **Response**:
+  - **Status Code**: `200 OK`
+  - **Response Body**:
+    ```json
+    {
+        "languages": [
+            "en",
+            "hi"
+        ]
+    }
+    ```
+
+---
+
+### 7. Create a new user
+
+- **Endpoint**: `POST /v1/user`
+- **Description**: Create a new user with a unique identifier.
+
+- **Request Body**:
+  ```json
+  {
+     "email": "Jay Dev",
+     "password": "password",
+     "language": "en"
+  }
+  ```
+
+### 8. Authenticate a user
+
+- **Endpoint**: `POST /v1/sessions`
+- **Description**: Authenticate a user with email and password.
+
+- **Request Body**:
+  ```json
+  {
+     "email": "Jay Dev",
+     "password": "password"
+  }
+  ```
+
+- **Response**:
+
+  - **Status Code**: `200 OK`
+  - **Response Body**:
+    ```json
+    {
+        "user_id": "1234",
+        "email": "Jay Dev",
+        "language": "en"
+    }
+    ```
 
 ---

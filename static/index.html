@@ -102,7 +102,7 @@
         // Fetch available languages from the server
         async function fetchLanguages() {
             try {
-                const response = await fetch("http://localhost:8000/languages");
+                const response = await fetch("http://localhost:8000/v1/languages");
                 const data = await response.json();
                 const languageSelect = document.getElementById("language-select");
                 languageSelect.innerHTML = '';

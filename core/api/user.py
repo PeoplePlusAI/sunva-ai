@@ -18,7 +18,7 @@ def hash_password(password: str) -> str:
     return sha256(password.encode()).hexdigest()
 
 # Endpoint to register a new user
-@router.post("/users", response_model=UserResponse)
+@router.post("/v1/users", response_model=UserResponse)
 async def register_user(user_request: UserCreateRequest, session: Session = Depends(get_session)):
     # Hash the password
     password_hash = hash_password(user_request.password)
@@ -46,7 +46,7 @@ async def register_user(user_request: UserCreateRequest, session: Session = Depe
     return UserResponse(user_id=new_user.user_id, email=new_user.email, language=new_user.language)
 
 # Endpoint to create a session (login)
-@router.post("/sessions", response_model=UserResponse)
+@router.post("/v1/sessions", response_model=UserResponse)
 async def create_session(user_request: UserLoginRequest, session: Session = Depends(get_session)):
     # Retrieve user data from the database
     statement = select(User).where(User.email == user_request.email)

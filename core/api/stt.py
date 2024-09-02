@@ -38,13 +38,13 @@ router = APIRouter()
 
 user_sessions = {}
 
-@router.get("/transcriptions", response_model=TranscriptionResponse)
+@router.get("/v1/transcriptions", response_model=TranscriptionResponse)
 async def get_transcriptions(session: AsyncSession = Depends(get_session)):
     transcriptions = await session.execute(select(TranscriptionDB))
     return {"transcriptions": transcriptions.scalars().all()}
 
 # API endpoint to retrieve a specific transcription by ID
-@router.get("/transcriptions/{transcription_id}", response_model=SingleTranscriptionResponse)
+@router.get("/v1/transcriptions/{transcription_id}", response_model=SingleTranscriptionResponse)
 async def get_transcription(transcription_id: int, session: AsyncSession = Depends(get_session)):
     transcription = await session.get(TranscriptionDB, transcription_id)
     if not transcription:
