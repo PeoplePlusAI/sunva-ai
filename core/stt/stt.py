@@ -9,8 +9,6 @@ class STT:
         self.models = {
             "GROQ": {
                 "en": "whisper-large-v3",  # Default model for English
-                "hi": "whisper-large-hi-v3",  # Default model for Hindi
-                # Add other languages and corresponding models
             },
             "BODHI": {
                 "hi": "hi-general-v2-8khz",  # Default model for Hindi in Bodhi

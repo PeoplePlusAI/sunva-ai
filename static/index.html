@@ -51,6 +51,14 @@
             padding: 10px;
             font-size: 16px;
         }
+        .language-select {
+            margin: 10px 0;
+            text-align: center;
+        }
+        select {
+            padding: 10px;
+            font-size: 16px;
+        }
     </style>
     <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
 </head>
@@ -58,6 +66,13 @@
     <div class="buttons">
         <button id="start-button">Start Transcription</button>
         <button id="stop-button" style="display:none;">Stop Transcription</button>
+    </div>
+    <div class="language-select">
+        <label for="language-select">Select Language: </label>
+        <select id="language-select">
+            <option value="en">English</option>
+            <option value="hi">Hindi</option>
+        </select>
     </div>
     <div class="columns">
         <div class="column">
@@ -76,6 +91,33 @@
         const audioQueue = [];
         let isSending = false;
         const transcriptionMap = {};
+        const userId = generateUserId();  // Generate a random user ID
+
+        function generateUserId() {
+            return 'user-' + Math.random().toString(36).substr(2, 9);
+        }
+
+        console.log("Generated User ID:", userId);
+
+        // Fetch available languages from the server
+        async function fetchLanguages() {
+            try {
+                const response = await fetch("http://localhost:8000/languages");
+                const data = await response.json();
+                const languageSelect = document.getElementById("language-select");
+                languageSelect.innerHTML = '';
+                data.languages.forEach(language => {
+                    const option = document.createElement("option");
+                    option.value = language;
+                    option.textContent = language === "en" ? "English" : "Hindi";
+                    languageSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Error fetching languages:", error);
+            }
+        }
+
+        fetchLanguages();
 
         async function startRecording() {
             try {
@@ -122,8 +164,9 @@
                 const audioBlob = audioQueue.shift();
                 const arrayBuffer = await audioBlob.arrayBuffer();
                 const base64String = arrayBufferToBase64(arrayBuffer);
+                const language = document.getElementById("language-select").value;
                 console.log('Sending audio data to server');
-                transcribeAndProcessSocket.send(JSON.stringify({ audio: base64String }));
+                transcribeAndProcessSocket.send(JSON.stringify({ audio: base64String, language: language, user_id: userId }));
                 console.log('Sent audio data to server');
                 isSending = false;
                 sendAudioChunks();  // Continue sending remaining chunks
@@ -228,7 +271,7 @@
         
         function sendTtsText(text) {
             let ttsSocket;
-            const jsonData = JSON.stringify({ text: text });  // Convert text to JSON format
+            const jsonData = JSON.stringify({ text: text, language: document.getElementById("language-select").value, user_id: userId });  // Send selected language and user ID with text
 
             if (!ttsSocket || ttsSocket.readyState !== WebSocket.OPEN) {
                 ttsSocket = new WebSocket("ws://localhost:8000/v1/ws/speech");

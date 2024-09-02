@@ -7,13 +7,13 @@ class LLM:
     def __init__(self, language: str):
         self.language = language
         self.models = {
+            "OPENAI": {
+                "en": "gpt-4o",  # Default OpenAI model for English
+                "hi": "gpt-40",  # Default OpenAI model for Hindi
+            },
             "CLAUDE": {
                 "en": "claude-3-opus-20240229",  # Default Claude model for English
                 "hi": "claude-3-opus-20240229",  # Default Claude model for Hindi
-            },
-            "OPENAI": {
-                "en": "gpt-4-turbo",  # Default OpenAI model for English
-                "hi": "gpt-4-turbo",  # Default OpenAI model for Hindi
             },
             "GOOGLE": {
                 "en": "gemini-pro",  # Default Google model for English

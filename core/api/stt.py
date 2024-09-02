@@ -54,7 +54,6 @@ async def get_transcription(transcription_id: int, session: AsyncSession = Depen
 @router.websocket("/v1/ws/transcription")
 async def websocket_transcribe_and_process(websocket: WebSocket):
     await websocket.accept()
-    user_id = websocket.client.host
 
     full_transcription = ""
     processing_candidate = ""
@@ -64,13 +63,6 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
     WORD_THRESHOLD = 30
     message_id = None
 
-    # Retrieve the selected language from Redis
-    selected_language = await redis_client.hget(f"user:{user_id}", "language")
-    if not selected_language:
-        selected_language = "en"  # Default to English if no language is selected
-    else:
-        selected_language = selected_language.decode("utf-8")  # Convert bytes to string
-
     try:
         while True:
             start_time = time.time()
@@ -79,6 +71,13 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
             print(f"Receive latency: {receive_latency:.4f} seconds")  # Log receive latency
 
             message = json.loads(data)
+
+            user_id = message.get("user_id", None)
+
+            if not user_id:
+                raise HTTPException(status_code=400, detail="User ID not provided")
+            
+            selected_language = message.get("language", "en")
             
             if "audio" in message:
                 audio_data = decode_audio_data(message)

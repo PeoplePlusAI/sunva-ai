@@ -1,17 +1,15 @@
 from pydantic import BaseModel
 
 class UserCreateRequest(BaseModel):
-    user_id: str
+    email: str
     password: str
     language: str
 
 class UserResponse(BaseModel):
     user_id: str
+    email: str
     language: str
 
 class UserLoginRequest(BaseModel):
-    user_id: str
+    email: str
     password: str
-
-class LanguageUpdateRequest(BaseModel):
-    language: str
