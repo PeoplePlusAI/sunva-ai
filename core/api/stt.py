@@ -92,6 +92,7 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
                         message_id = generate_message_id()
                     # Check for <EOF> signal
                     if partial_transcription == "<EOF>":
+                        print("Received EOF signal")
                         # Process the current candidate if EOF is detected
                         if processing_candidate.strip():
                             processed_result = await asyncio.get_event_loop().run_in_executor(

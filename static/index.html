@@ -109,14 +109,27 @@
                 data.languages.forEach(language => {
                     const option = document.createElement("option");
                     option.value = language;
-                    option.textContent = language === "en" ? "English" : "Hindi";
+            
+                    switch (language) {
+                        case "en":
+                            option.textContent = "English";
+                            break;
+                        case "hi":
+                            option.textContent = "Hindi";
+                            break;
+                        case "ml":
+                            option.textContent = "Malayalam";
+                            break;
+                        default:
+                            option.textContent = language;  // Fallback to display the language code
+                    }
+            
                     languageSelect.appendChild(option);
                 });
             } catch (error) {
                 console.error("Error fetching languages:", error);
             }
         }
-
         fetchLanguages();
 
         async function startRecording() {
@@ -131,7 +144,7 @@
                     mimeType: 'audio/wav',
                     numberOfAudioChannels: 1,  // Mono channel is sufficient for speech recognition
                     desiredSampRate: 16000,
-                    timeSlice: 5000, // Get data every 5 seconds
+                    timeSlice: 3000, // Get data every 5 seconds
                     ondataavailable: (blob) => {
                         if (blob && blob.size > 0) {
                             audioQueue.push(blob);

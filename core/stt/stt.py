@@ -2,6 +2,7 @@ from io import BytesIO
 from typing import Tuple, Union
 from core.stt.groq_client import GroqSTT
 from core.stt.bodhi_client import BodhiSTT
+from core.stt.malayalam_client import MalayalamSTT
 
 class STT:
     def __init__(self, language: str):
@@ -14,7 +15,10 @@ class STT:
                 "hi": "hi-general-v2-8khz",  # Default model for Hindi in Bodhi
                 "kn": "kn-general-v2-8khz",  # Default model for Kannada
                 # Add other languages and corresponding models
-            }
+            },
+            "MALAYALAM": {
+                "ml": "Bajiyo/w2v-bert-2.0-nonstudio_and_studioRecords_final",  # Default model for Malayalam
+            },
         }
         self.model_id, self.model_enum = self._select_model()
 
@@ -35,6 +39,10 @@ class STT:
         elif self.model_enum == "BODHI":
             bodhi_stt = BodhiSTT(self.model_id, language=self.language)
             async for partial_transcription in bodhi_stt.transcribe_stream(audio_buffer):
+                yield partial_transcription
+        elif self.model_enum == "MALAYALAM":
+            malayalam_stt = MalayalamSTT(self.model_id, language=self.language)
+            async for partial_transcription in malayalam_stt.transcribe_stream(audio_buffer):
                 yield partial_transcription
         else:
             raise ValueError(f"Unsupported language: {self.language}")

@@ -9,7 +9,8 @@ class LLM:
         self.models = {
             "OPENAI": {
                 "en": "gpt-4o",  # Default OpenAI model for English
-                "hi": "gpt-40",  # Default OpenAI model for Hindi
+                "hi": "gpt-4o",
+                "ml": "gpt-4o"  # Default OpenAI model for Hindi
             },
             "CLAUDE": {
                 "en": "claude-3-opus-20240229",  # Default Claude model for English
