@@ -21,6 +21,7 @@ class TTS:
             ]
         }
         self.loaded_model = self._load_model()
+        self.loaded_model = self._load_model()
 
     def list_models(self):
         return self.models
@@ -52,4 +53,3 @@ class TTS:
             return self.loaded_model.speech(text)
         else:
             return None
-        

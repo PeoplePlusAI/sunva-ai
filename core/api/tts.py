@@ -28,13 +28,13 @@ tts_model = os.getenv("TTS_BASE_MODEL")
               
 router = APIRouter()
 
-
 @router.websocket("/v1/ws/speech")
 async def tts_websocket(
     websocket: WebSocket, 
     session: AsyncSession = Depends(get_session)
 ):
     await websocket.accept()
+
     try:
         user_id = websocket.client.host
         cache_key = f"tts_session:{user_id}"
