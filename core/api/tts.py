@@ -26,6 +26,8 @@ load_dotenv(
               
 router = APIRouter()
 
+tts_model = os.getenv("TTS_BASE_MODEL", "coqui-tacotron2")
+
 @router.websocket("/v1/ws/speech")
 async def tts_websocket(
     websocket: WebSocket, 
@@ -52,7 +54,7 @@ async def tts_websocket(
                 print(f"Received text for TTS: {text}")
 
                 wav_data = await asyncio.get_event_loop().run_in_executor(
-                    executor, text_to_speech, text, selected_language
+                    executor, text_to_speech, text, tts_model, selected_language
                 )
             else:
                 wav_data = None
