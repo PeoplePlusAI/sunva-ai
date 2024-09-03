@@ -21,7 +21,6 @@ class TTS:
             ]
         }
         self.loaded_model = self._load_model()
-        self.loaded_model = self._load_model()
 
     def list_models(self):
         return self.models
@@ -33,7 +32,7 @@ class TTS:
             for model in models
         }
         return model_dict.get(model_name, (None, None))
-    
+
     def _load_model(self):
         # Retrieve the model enum and model name from the models dictionary
         model_enum, model_name = self.model_enum(self.model)
