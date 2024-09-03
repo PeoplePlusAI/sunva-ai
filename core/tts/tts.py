@@ -4,7 +4,7 @@ from core.tts.ai4bharat_client import Ai4BharatTTS
 from typing import Tuple
 
 class TTS:
-    def __init__(self, model_name: str, language: str = "en"):
+    def __init__(self, model_name: str, language: str):
         self.model = model_name
         self.language = language
         self.models = {
@@ -16,8 +16,11 @@ class TTS:
             "ai4bharat": [
                 ("ai4bharat-en", "ai4bharat/indic-tts-coqui-misc-gpu--t4"),
                 ("ai4bharat-kn", "ai4bharat/indic-tts-coqui-dravidian-gpu--t4"),
+                ("ai4bharat-ml", "ai4bharat/indic-tts-coqui-dravidian-gpu--t4"),
+                ("ai4bharat-hi", "ai4bharat/indic-tts-coqui-indo_aryan-gpu--t4")
             ]
         }
+        self.loaded_model = self._load_model()
 
     def list_models(self):
         return self.models
@@ -30,13 +33,23 @@ class TTS:
         }
         return model_dict.get(model_name, (None, None))
     
+    def _load_model(self):
+        # Retrieve the model enum and model name from the models dictionary
+        model_enum, model_name = self.model_enum(self.model)
+        
+        if model_enum == "coqui":
+            print(f"Loading model: {model_name}")
+            return CoquiTTS(model_name, language=self.language)
+        elif model_enum == "ai4bharat":
+            return Ai4BharatTTS(model_name, language=self.language)
+        else:
+            # Raise an exception if the model is not found
+            raise ValueError(f"Model {self.model} not found in the available models")
 
     def speech(self, text: str) -> bytes:
-        model_enum, model_name = self.model_enum(self.model)
-        if model_enum == "coqui":
-            return CoquiTTS(model_name, language=self.language).speech(text)
-        elif model_enum == "ai4bharat":
-            return Ai4BharatTTS(model_name, language=self.language).speech(text)
+        if self.loaded_model:
+            # Generate speech using the pre-loaded model
+            return self.loaded_model.speech(text)
         else:
             return None
         

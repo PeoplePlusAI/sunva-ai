@@ -3,13 +3,13 @@ from core.tts.bhashini_api import *
 import json
 
 class Ai4BharatTTS:
-    def __init__(self, model_name: str = "ai4bharat/indic-tts-coqui-misc-gpu--t4", language: str="en"):
+    def __init__(self, model_name: str, language: str):
         self.model_name = model_name
         self.language = language
         self.TTS = Bhashini()
 
     def speech(self, text: str) -> bytes:
-        targetLanguage = "ml"
+        targetLanguage = self.language
         ttsServiceId = self.model_name
         text = text
 

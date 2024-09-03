@@ -44,23 +44,20 @@ async def tts_websocket(
             message = await websocket.receive_text()
             print(f"Received message: {message}")
             message = json.loads(message)
-
-            if "language" in message:
-                language = message["language"]
-            else:
-                language = "en"
+            selected_language = message.get("language", "en") #This sets the lang everywhere for pipeline.
+            user_id = message.get("user_id", "default_user")
             
             if "text" in message:
                 text = message["text"]
                 print(f"Received text for TTS: {text}")
 
                 wav_data = await asyncio.get_event_loop().run_in_executor(
-                    executor, text_to_speech, text, tts_model, language
+                    executor, text_to_speech, text, tts_model, selected_language
                 )
             else:
                 wav_data = None
             print("tts_mdoel: ", tts_model)
-            if wav_data and tts_model == "ai4bharat-kn":
+            if wav_data and tts_model.startswith("ai4bharat"):
                 # Cache in Redis
                 print(wav_data)
                 await redis_client.rpush(cache_key, json.dumps({"text": text, "wav_data": wav_data}))
