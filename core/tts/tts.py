@@ -1,4 +1,6 @@
 from core.tts.coqui_client import CoquiTTS
+from core.tts.ai4bharat_client import Ai4BharatTTS
+
 from typing import Tuple
 
 class TTS:
@@ -10,6 +12,10 @@ class TTS:
                 ("coqui-tacotron2", "tts_models/en/ljspeech/tacotron2-DDC"),
                 ("coqui-glow-tts", "tts_models/en/ljspeech/glow-tts"),
                 ("coqui-waveglow", "tts_models/en/ljspeech/waveglow"),
+            ],
+            "ai4bharat": [
+                ("ai4bharat-en", "ai4bharat/indic-tts-coqui-misc-gpu--t4"),
+                ("ai4bharat-kn", "ai4bharat/indic-tts-coqui-dravidian-gpu--t4"),
             ]
         }
 
@@ -29,6 +35,8 @@ class TTS:
         model_enum, model_name = self.model_enum(self.model)
         if model_enum == "coqui":
             return CoquiTTS(model_name, language=self.language).speech(text)
+        elif model_enum == "ai4bharat":
+            return Ai4BharatTTS(model_name, language=self.language).speech(text)
         else:
             return None
         
