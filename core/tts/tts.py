@@ -1,8 +1,10 @@
 from core.tts.coqui_client import CoquiTTS
+from core.tts.ai4bharat_client import Ai4BharatTTS
+
 from typing import Tuple
 
 class TTS:
-    def __init__(self, model_name: str, language: str = "en"):
+    def __init__(self, model_name: str, language: str):
         self.model = model_name
         self.language = language
         self.models = {
@@ -10,6 +12,12 @@ class TTS:
                 ("coqui-tacotron2", "tts_models/en/ljspeech/tacotron2-DDC"),
                 ("coqui-glow-tts", "tts_models/en/ljspeech/glow-tts"),
                 ("coqui-waveglow", "tts_models/en/ljspeech/waveglow"),
+            ],
+            "ai4bharat": [
+                ("ai4bharat-en", "ai4bharat/indic-tts-coqui-misc-gpu--t4"),
+                ("ai4bharat-kn", "ai4bharat/indic-tts-coqui-dravidian-gpu--t4"),
+                ("ai4bharat-ml", "ai4bharat/indic-tts-coqui-dravidian-gpu--t4"),
+                ("ai4bharat-hi", "ai4bharat/indic-tts-coqui-indo_aryan-gpu--t4")
             ]
         }
         self.loaded_model = self._load_model()
@@ -30,10 +38,10 @@ class TTS:
         model_enum, model_name = self.model_enum(self.model)
         
         if model_enum == "coqui":
-            # Assuming CoquiTTS is a class from the Coqui library that loads the TTS model
-            # Replace CoquiTTS with the actual class or function used to load your model
             print(f"Loading model: {model_name}")
             return CoquiTTS(model_name, language=self.language)
+        elif model_enum == "ai4bharat":
+            return Ai4BharatTTS(model_name, language=self.language)
         else:
             # Raise an exception if the model is not found
             raise ValueError(f"Model {self.model} not found in the available models")
