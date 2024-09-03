@@ -28,6 +28,8 @@ tts_model = os.getenv("TTS_BASE_MODEL")
               
 router = APIRouter()
 
+tts_model = os.getenv("TTS_BASE_MODEL", "coqui-tacotron2")
+
 @router.websocket("/v1/ws/speech")
 async def tts_websocket(
     websocket: WebSocket, 
