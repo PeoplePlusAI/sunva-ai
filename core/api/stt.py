@@ -72,7 +72,7 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
 
             message = json.loads(data)
 
-            user_id = message.get("user_id", None)
+            user_id = message.get("user_id", "default_user")
 
             if not user_id:
                 raise HTTPException(status_code=400, detail="User ID not provided")

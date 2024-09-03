@@ -33,13 +33,6 @@ async def tts_websocket(
 ):
     await websocket.accept()
 
-    # Retrieve the selected language from Redis
-    selected_language = await redis_client.hget(f"user:{user_id}", "language")
-    if not selected_language:
-        selected_language = "en"  # Default to English if no language is selected
-    else:
-        selected_language = selected_language.decode("utf-8")  # Convert bytes to string
-
     try:
         user_id = websocket.client.host
         cache_key = f"tts_session:{user_id}"
@@ -50,10 +43,9 @@ async def tts_websocket(
             print(f"Received message: {message}")
             message = json.loads(message)
 
-            if "language" in message:
-                language = message["language"]
-            else:
-                language = "en"
+            selected_language = message.get("language", "en")
+
+            user_id = message.get("user_id", "default_user")
             
             if "text" in message:
                 text = message["text"]
