@@ -42,9 +42,8 @@ async def tts_websocket(
             message = await websocket.receive_text()
             print(f"Received message: {message}")
             message = json.loads(message)
-
-            selected_language = message.get("language", "en")
-
+            
+            selected_language = message.get("language", "en") #This sets the lang everywhere for pipeline.
             user_id = message.get("user_id", "default_user")
             
             if "text" in message:
@@ -56,8 +55,15 @@ async def tts_websocket(
                 )
             else:
                 wav_data = None
-    
-            if wav_data:
+            print("tts_mdoel: ", tts_model)
+            if wav_data and tts_model.startswith("ai4bharat"):
+                # Cache in Redis
+                print(wav_data)
+                await redis_client.rpush(cache_key, json.dumps({"text": text, "wav_data": wav_data}))
+                
+                response = TTSResponse(audio=wav_data)
+                await websocket.send_json(response.model_dump())
+            elif wav_data and (tts_model == "coqui-glow-tts" or tts_model == "coqui-tacotron2"):
                 wav_data_pickled = pickle.dumps(wav_data)
                 audio_base64 = encode_wav_to_base64(wav_data)
                 wav_data_base64 = base64.b64encode(wav_data_pickled).decode('utf-8')
