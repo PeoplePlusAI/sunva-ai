@@ -7,5 +7,5 @@ async def speech_to_text(audio_buffer: io.BytesIO, language: str):
     async for partial_transcription in stt.transcribe_stream(audio_buffer):
         yield partial_transcription
 
-def text_to_speech(text: str, language: str) -> bytes:
-    return TTS(language=language).speech(text)
+def text_to_speech(text: str, base_model: str, language: str) -> bytes:
+    return TTS(model_name=base_model, language=language).speech(text)
