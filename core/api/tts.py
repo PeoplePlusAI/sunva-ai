@@ -23,10 +23,10 @@ import os
 load_dotenv(
     dotenv_path="ops/.env"
 )
-              
-router = APIRouter()
 
 tts_model = os.getenv("TTS_BASE_MODEL", "coqui-tacotron2")
+              
+router = APIRouter()
 
 @router.websocket("/v1/ws/speech")
 async def tts_websocket(
@@ -44,9 +44,10 @@ async def tts_websocket(
             message = await websocket.receive_text()
             print(f"Received message: {message}")
             message = json.loads(message)
+            
             selected_language = message.get("language", "en") #This sets the lang everywhere for pipeline.
             user_id = message.get("user_id", "default_user")
-            
+
             if "text" in message:
                 text = message["text"]
                 print(f"Received text for TTS: {text}")

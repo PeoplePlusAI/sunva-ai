@@ -34,32 +34,26 @@ load_dotenv(
     dotenv_path="ops/.env"
 )
 
-speech_base_model = os.getenv("SPEECH_BASE_MODEL", "Whisper Large")
-
-llm_base_model = os.getenv("BASE_MODEL", "Claude 3 Opus")
-
 router = APIRouter()
 
 user_sessions = {}
 
-@router.get("/transcriptions", response_model=TranscriptionResponse)
+@router.get("/v1/transcriptions", response_model=TranscriptionResponse)
 async def get_transcriptions(session: AsyncSession = Depends(get_session)):
     transcriptions = await session.execute(select(TranscriptionDB))
     return {"transcriptions": transcriptions.scalars().all()}
 
 # API endpoint to retrieve a specific transcription by ID
-@router.get("/transcriptions/{transcription_id}", response_model=SingleTranscriptionResponse)
+@router.get("/v1/transcriptions/{transcription_id}", response_model=SingleTranscriptionResponse)
 async def get_transcription(transcription_id: int, session: AsyncSession = Depends(get_session)):
     transcription = await session.get(TranscriptionDB, transcription_id)
     if not transcription:
         raise HTTPException(status_code=404, detail="Transcription not found")
     return {"transcription": transcription}
 
-
 @router.websocket("/v1/ws/transcription")
 async def websocket_transcribe_and_process(websocket: WebSocket):
     await websocket.accept()
-    user_id = websocket.client.host
 
     full_transcription = ""
     processing_candidate = ""
@@ -77,7 +71,13 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
             print(f"Receive latency: {receive_latency:.4f} seconds")  # Log receive latency
 
             message = json.loads(data)
-            language = message.get("language", "en")
+
+            user_id = message.get("user_id", "default_user")
+
+            if not user_id:
+                raise HTTPException(status_code=400, detail="User ID not provided")
+            
+            selected_language = message.get("language", "en")
             
             if "audio" in message:
                 audio_data = decode_audio_data(message)
@@ -86,7 +86,7 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
                 # Reset buffer position to the beginning
                 audio_buffer.seek(0)
 
-                async for partial_transcription in speech_to_text(audio_buffer, speech_base_model, language):
+                async for partial_transcription in speech_to_text(audio_buffer, selected_language):
 
                     if not message_id:
                         message_id = generate_message_id()
@@ -98,7 +98,7 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
                                 executor, 
                                 process_transcription, 
                                 processing_candidate.strip(), 
-                                llm_base_model
+                                selected_language
                             )
                             if "text" in processed_result:
                                 processed_transcription += processed_result["text"] + " "
@@ -142,7 +142,7 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
                             executor, 
                             process_transcription, 
                             processing_candidate.strip(), 
-                            llm_base_model
+                            selected_language
                         )
                         if "text" in processed_result:
                             processed_transcription += processed_result["text"] + " "
@@ -175,7 +175,7 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
         # Process any remaining transcription
         if processing_candidate.strip():
             processed_result = await asyncio.get_event_loop().run_in_executor(
-                executor, process_transcription, processing_candidate.strip(), llm_base_model
+                executor, process_transcription, processing_candidate.strip(), selected_language
             )
             if processed_result:
                 processed_transcription += processed_result["text"] + " "
@@ -190,7 +190,7 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
         # Process any remaining transcription in case of an exception
         if processing_candidate.strip():
             processed_result = await asyncio.get_event_loop().run_in_executor(
-                executor, process_transcription, processing_candidate.strip(), llm_base_model
+                executor, process_transcription, processing_candidate.strip(), selected_language
             )
             processed_transcription += processed_result.get("text") + " "
 
@@ -203,7 +203,7 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
         # Final processing before closing
         if processing_candidate.strip():
             processed_result = await asyncio.get_event_loop().run_in_executor(
-                executor, process_transcription, processing_candidate.strip(), llm_base_model
+                executor, process_transcription, processing_candidate.strip(), selected_language
             )
             processed_transcription += processed_result.get("text") + " "
 
