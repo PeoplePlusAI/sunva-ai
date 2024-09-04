@@ -47,7 +47,7 @@ async def tts_websocket(
             
             selected_language = message.get("language", "en") #This sets the lang everywhere for pipeline.
             user_id = message.get("user_id", "default_user")
-            
+
             if "text" in message:
                 text = message["text"]
                 print(f"Received text for TTS: {text}")
