@@ -23,6 +23,8 @@ import os
 load_dotenv(
     dotenv_path="ops/.env"
 )
+
+tts_model = os.getenv("TTS_BASE_MODEL", "coqui-tacotron2")
               
 router = APIRouter()
 
