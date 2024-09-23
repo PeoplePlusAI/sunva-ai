@@ -14,6 +14,11 @@ Often it could take a lot of time for the deaf person to read transcriptions and
 
 SUNVA AI provides a text-to-speech + LLM layer features that help the deaf person having speech irregularities to type less and respond more. For example, if the deaf person types "I coffee", SUNVA AI will convert it to "I would like to have a coffee" and speak it out.
 
+### Sunva Frontend
+
+[Sunva frontend](https://github.com/PeoplePlusAI/sunva-frontend) is a single-screen UI where you can read the intelligently simplified transcriptions and write your response, which will be spoken back in the selected speech. Our idea is to build this app, take it to our deaf community volunteers, and based on their feedback, iterate the UI to make it even better. 
+  
+
 
 ## SUNVA AI workplan 
 
