@@ -51,7 +51,8 @@ async def register_user(user_request: UserCreateRequest, session: Session = Depe
 async def create_session(user_request: UserLoginRequest, session: Session = Depends(get_session)):
     # Retrieve user data from the database
     statement = select(User).where(User.email == user_request.email)
-    user = session.exec(statement).first()
+    user = await session.execute(statement)
+    user = user.scalars().first()
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
