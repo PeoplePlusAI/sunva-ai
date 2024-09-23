@@ -41,8 +41,8 @@ async def register_user(user_request: UserCreateRequest, session: Session = Depe
         language=user_request.language
     )
     session.add(new_user)
-    session.commit()
-    session.refresh(new_user)
+    await session.commit()
+    await session.refresh(new_user)
 
     return UserResponse(user_id=new_user.user_id, email=new_user.email, language=new_user.language)
 
