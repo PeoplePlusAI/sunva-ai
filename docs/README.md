@@ -192,13 +192,13 @@
 
 ### 7. Create a new user
 
-- **Endpoint**: `POST /v1/user`
+- **Endpoint**: `POST /user/login`
 - **Description**: Create a new user with a unique identifier.
 
 - **Request Body**:
   ```json
   {
-     "email": "Jay Dev",
+     "email": "testuser@gmail.com",
      "password": "password",
      "language": "en"
   }

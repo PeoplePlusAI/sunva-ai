@@ -18,14 +18,15 @@ def hash_password(password: str) -> str:
     return sha256(password.encode()).hexdigest()
 
 # Endpoint to register a new user
-@router.post("/v1/users", response_model=UserResponse)
+@router.post("/user/login", response_model=UserResponse)
 async def register_user(user_request: UserCreateRequest, session: Session = Depends(get_session)):
     # Hash the password
     password_hash = hash_password(user_request.password)
 
     # Check if the email already exists
     statement = select(User).where(User.email == user_request.email)
-    existing_user = session.exec(statement).first()
+    existing_user = await session.execute(statement)
+    existing_user = existing_user.scalars().first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
 
