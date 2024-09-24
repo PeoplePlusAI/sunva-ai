@@ -170,7 +170,6 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
                 audio_buffer = io.BytesIO()
 
     except WebSocketDisconnect:
-        print(f"Client {user_id} disconnected")
 
         # Process any remaining transcription
         if processing_candidate.strip():

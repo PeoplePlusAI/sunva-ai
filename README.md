@@ -47,6 +47,7 @@ redis-server &
 ```
 4. Create a .env file inside ops dir and add the following variables
 ```
+DATABASE_URL=YOURPOSTGRES_URL
 GROQ_API_KEY=your_api_key
 CLAUDE_API_KEY=your_api_key
 OPENAI_API_KEY=your_api_key
