@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from core.db.init_db import init_db
+from core.db.init_db import init_db, shutdown_db
 from fastapi.responses import FileResponse
 from core.api import stt, tts, user, language
 
@@ -22,6 +22,10 @@ def is_alive():
 @app.on_event("startup")
 async def on_startup():
     await init_db()
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    await shutdown_db()
 
 
 if __name__ == "__main__":
