@@ -82,6 +82,7 @@
       ```json
       {
           "language": "en",
+          "user_id": "<uuid>",
           "audio": "<base64_encoded_audio_data>"
       }
       ```
@@ -154,6 +155,7 @@
       ```json
       {
           "language": "en",
+          "user_id": "<uuid>",
           "text": "Hello, how are you?"
       }
       ```
