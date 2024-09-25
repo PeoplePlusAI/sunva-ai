@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Header, Response, status
+from fastapi import APIRouter, HTTPException, Depends, Header, Response, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
@@ -15,6 +15,7 @@ from core.models.db import User
 import uuid
 import os
 from dotenv import load_dotenv
+import logging
 
 # Load environment variables
 load_dotenv(
@@ -159,22 +160,43 @@ async def logout(response: Response, credentials: HTTPAuthorizationCredentials =
 
 # Add this new endpoint after the existing ones
 @router.get("/user/verify", response_model=UserResponse)
-async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+async def verify_token(request: Request, credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)):
+    logger.info(f"Received request headers: {request.headers}")
+    
+    if not credentials:
+        logger.warning("No credentials provided")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authorization header is missing"
+        )
+    
     token = credentials.credentials
+    logger.info(f"Received token: {token[:10]}...")  # Log first 10 characters of token for debugging
+    
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
         user_id = payload.get("user_id")
         
+        logger.info(f"Decoded payload: email={email}, user_id={user_id}")
+        
         if email is None or user_id is None:
+            logger.warning("Invalid token payload")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token payload"
             )
         
         return UserResponse(user_id=user_id, email=email, access_token=token)
-    except JWTError:
+    except JWTError as e:
+        logger.error(f"JWT decoding error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred"
         )
