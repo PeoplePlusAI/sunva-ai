@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Header
+from fastapi import APIRouter, HTTPException, Depends, Header, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
@@ -47,7 +47,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 # Endpoint to register a new user
 @router.post("/user/register", response_model=UserResponse)
-async def register_user(user_request: UserCreateRequest, session: Session = Depends(get_session)):
+async def register_user(user_request: UserCreateRequest, response: Response, session: Session = Depends(get_session)):
     # Hash the password
     password_hash = hash_password(user_request.password)
 
@@ -77,12 +77,24 @@ async def register_user(user_request: UserCreateRequest, session: Session = Depe
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
+    # Set the access token as a secure HTTP-only cookie
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    )
+
+
     return UserResponse(user_id=new_user.user_id, email=new_user.email, access_token=access_token)
 
 # Endpoint to create a session (login)
 @router.post("/user/login", response_model=UserResponse)
 async def create_session(
-    user_request: UserLoginRequest, 
+    user_request: UserLoginRequest,
+    response: Response, 
     session: Session = Depends(get_session),
     authorization: Optional[str] = Header(None)
 ):
@@ -120,16 +132,27 @@ async def create_session(
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    )
+
     return UserResponse(user_id=user.user_id, email=user.email, access_token=access_token)
 
 # Endpoint to delete a session (logout)
 @router.post("/user/logout")
-async def logout(credentials: HTTPAuthorizationCredentials = Depends(security)):
+async def logout(response: Response, credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         # In a real-world scenario, you might want to blacklist this token
         # or remove it from a token store
+
+        response.delete_cookie(key="access_token")
         return {"message": "Successfully logged out"}
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
