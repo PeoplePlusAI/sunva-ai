@@ -7,7 +7,6 @@ class User(SQLModel, table=True):
     user_id: str = Field(index=True, unique=True)
     email: str = Field(index=True, unique=True)
     password_hash: str
-    language: str
 
     # Relationships
     transcriptions: List["TranscriptionDB"] = Relationship(back_populates="user")
@@ -20,6 +19,7 @@ class TranscriptionDB(SQLModel, table=True):
     transcription: str
     processed_text: Optional[str] = None
     word_count: int = 0  # Adding word_count to the model
+    language: str
 
     # Relationships
     user: Optional[User] = Relationship(back_populates="transcriptions")
