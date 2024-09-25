@@ -37,14 +37,13 @@ async def register_user(user_request: UserCreateRequest, session: Session = Depe
     new_user = User(
         user_id=user_id,
         email=user_request.email,
-        password_hash=password_hash,
-        language=user_request.language
+        password_hash=password_hash
     )
     session.add(new_user)
     await session.commit()
     await session.refresh(new_user)
 
-    return UserResponse(user_id=new_user.user_id, email=new_user.email, language=new_user.language)
+    return UserResponse(user_id=new_user.user_id, email=new_user.email)
 
 # Endpoint to create a session (login)
 @router.post("/v1/sessions", response_model=UserResponse)
@@ -61,4 +60,4 @@ async def create_session(user_request: UserLoginRequest, session: Session = Depe
     if user.password_hash != hash_password(user_request.password):
         raise HTTPException(status_code=401, detail="Invalid password")
 
-    return UserResponse(user_id=user.user_id, email=user.email, language=user.language)
+    return UserResponse(user_id=user.user_id, email=user.email)
