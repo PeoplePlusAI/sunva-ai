@@ -43,7 +43,7 @@ async def register_user(user_request: UserCreateRequest, session: Session = Depe
     await session.commit()
     await session.refresh(new_user)
 
-    return UserResponse(user_id=new_user.user_id, email=new_user.email, language=new_user.language)
+    return UserResponse(user_id=new_user.user_id, email=new_user.email)
 
 # Endpoint to create a session (login)
 @router.post("/v1/sessions", response_model=UserResponse)
