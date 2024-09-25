@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Header, Response
+from fastapi import APIRouter, HTTPException, Depends, Header, Response, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
@@ -156,3 +156,25 @@ async def logout(response: Response, credentials: HTTPAuthorizationCredentials =
         return {"message": "Successfully logged out"}
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+# Add this new endpoint after the existing ones
+@router.get("/user/verify", response_model=UserResponse)
+async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+        user_id = payload.get("user_id")
+        
+        if email is None or user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token payload"
+            )
+        
+        return UserResponse(user_id=user_id, email=email, access_token=token)
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+        )
