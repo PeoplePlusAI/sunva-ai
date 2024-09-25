@@ -213,7 +213,7 @@
   ```
 
 ### 9. User Login (Create Session)
-- **Endpoint**: `POST /v1/sessions`
+- **Endpoint**: `POST /user/login`
 - **Description**: Authenticate a user and create a new session.
 - **Request Body**:
   ```json
