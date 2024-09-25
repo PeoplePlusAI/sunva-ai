@@ -80,7 +80,7 @@ async def register_user(user_request: UserCreateRequest, session: Session = Depe
     return UserResponse(user_id=new_user.user_id, email=new_user.email, access_token=access_token)
 
 # Endpoint to create a session (login)
-@router.post("/v1/sessions", response_model=UserResponse)
+@router.post("/user/login", response_model=UserResponse)
 async def create_session(
     user_request: UserLoginRequest, 
     session: Session = Depends(get_session),
