@@ -96,7 +96,7 @@ async def tts_websocket(
 
             # Convert the bytes back to the original list of floats
             wav_data = pickle.loads(wav_data_bytes)
-            speech_record = SpeechDB(user_id=user_id, audio=wav_data, text=text)
+            speech_record = SpeechDB(user_id=user_id, audio=wav_data, text=text, language=selected_language)
             session.add(speech_record)
         await session.commit()
 

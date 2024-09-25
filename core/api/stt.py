@@ -212,7 +212,7 @@ async def websocket_transcribe_and_process(websocket: WebSocket):
         })
 
 @router.post("/v1/transcription/save")
-async def save_transcription(user_id: str, session: AsyncSession = Depends(get_session)):
+async def save_transcription(user_id: str, language: str, session: AsyncSession = Depends(get_session)):
     # Retrieve the transcription data from Redis
     session_data = await redis_client.hgetall(f"transcription:{user_id}")
 
@@ -227,7 +227,8 @@ async def save_transcription(user_id: str, session: AsyncSession = Depends(get_s
         new_entry = TranscriptionDB(
             user_id=user_id,
             transcription=transcription,
-            processed_text=processed_transcription
+            processed_text=processed_transcription,
+            language=language
         )
         session.add(new_entry)
         await session.commit()

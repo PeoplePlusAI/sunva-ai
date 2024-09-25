@@ -30,6 +30,7 @@ class SpeechDB(SQLModel, table=True):
     user_id: Optional[int] = Field(default=None, foreign_key="user.id")
     audio: bytes
     text: Optional[str] = None
+    language: str
 
     # Relationships
     user: Optional[User] = Relationship(back_populates="speeches")
