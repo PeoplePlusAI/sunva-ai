@@ -146,6 +146,7 @@
         "detail": "Failed to retrieve session data."
     }
     ```
+---
 
 ### 6. WebSocket: Text-to-Speech (TTS) Processing
 - **Endpoint**: `WebSocket /v1/ws/speech`
@@ -175,10 +176,9 @@
 
 ---
 
-### 6. Get all available languages
+### 7. Get all available languages
 - **Endpoint**: `GET /v1/languages`
 - **Description**: Retrieve a list of all available languages for transcription and TTS processing.
-
 - **Response**:
   - **Status Code**: `200 OK`
   - **Response Body**:
@@ -193,41 +193,57 @@
 
 ---
 
-### 7. Create a new user
-
-- **Endpoint**: `POST /user/login`
+### 8. User Registration
+- **Endpoint**: `POST /user/register`
 - **Description**: Create a new user with a unique identifier.
-
 - **Request Body**:
   ```json
   {
-     "email": "testuser@gmail.com",
-     "password": "password"
+    "email": "user@example.com",
+    "password": "securepassword"
   }
   ```
-
-### 8. Authenticate a user
-
-- **Endpoint**: `POST /v1/sessions`
-- **Description**: Authenticate a user with email and password.
-
-- **Request Body**:
-  ```json
-  {
-     "email": "Jay Dev",
-     "password": "password"
-  }
-  ```
-
 - **Response**:
+  ```json
+  {
+    "user_id": "uuid",
+    "email": "user@example.com",
+    "access_token": "jwt_token"
+  }
+  ```
 
+### 9. User Login (Create Session)
+- **Endpoint**: `POST /v1/sessions`
+- **Description**: Authenticate a user and create a new session.
+- **Request Body**:
+  ```json
+  {
+    "email": "user@example.com",
+    "password": "securepassword"
+  }
+  ```
+- **Response**:
   - **Status Code**: `200 OK`
   - **Response Body**:
     ```json
     {
-        "user_id": "1234",
-        "email": "Jay Dev"
+      "user_id": "uuid",
+      "email": "user@example.com",
+      "access_token": "jwt_token"
     }
     ```
+- **Note**: If a valid token is provided in the Authorization header, the endpoint will return the existing session information.
+
+### 10. User Logout (Delete Session)
+- **Endpoint**: `POST /v1/logout`
+- **Description**: Log out the user and delete their session.
+- **Headers**: 
+  - `Authorization: Bearer <access_token>`
+- **Response**:
+  ```json
+  {
+    "message": "Successfully logged out"
+  }
+  ```
 
 ---

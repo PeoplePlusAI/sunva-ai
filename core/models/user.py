@@ -7,6 +7,8 @@ class UserCreateRequest(BaseModel):
 class UserResponse(BaseModel):
     user_id: str
     email: str
+    access_token: str
+    message: Optional[str] = None
 
 class UserLoginRequest(BaseModel):
     email: str
