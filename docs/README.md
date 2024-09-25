@@ -199,8 +199,7 @@
   ```json
   {
      "email": "testuser@gmail.com",
-     "password": "password",
-     "language": "en"
+     "password": "password"
   }
   ```
 
@@ -224,8 +223,7 @@
     ```json
     {
         "user_id": "1234",
-        "email": "Jay Dev",
-        "language": "en"
+        "email": "Jay Dev"
     }
     ```
 
