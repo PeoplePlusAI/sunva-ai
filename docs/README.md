@@ -123,6 +123,7 @@
 - **Description**: Save the most recent transcription session for a specific user to the database.
 - **Query Parameters**:
   - `user_id` (str): The unique identifier of the user whose transcription data should be saved.
+  - `language` (str): The language code of the transcription data.
 - **Response**:
   - **Status Code**: `200 OK`
   - **Response Body**:
