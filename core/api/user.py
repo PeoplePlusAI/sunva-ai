@@ -123,7 +123,7 @@ async def create_session(
     return UserResponse(user_id=user.user_id, email=user.email, access_token=access_token)
 
 # Endpoint to delete a session (logout)
-@router.post("/v1/logout")
+@router.post("/user/logout")
 async def logout(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     try:

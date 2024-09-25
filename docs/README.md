@@ -235,7 +235,7 @@
 - **Note**: If a valid token is provided in the Authorization header, the endpoint will return the existing session information.
 
 ### 10. User Logout (Delete Session)
-- **Endpoint**: `POST /v1/logout`
+- **Endpoint**: `POST /user/logout`
 - **Description**: Log out the user and delete their session.
 - **Headers**: 
   - `Authorization: Bearer <access_token>`
