@@ -8,16 +8,16 @@ class TTS:
         self.model = model_name
         self.language = language
         self.models = {
-            "coqui": [
-                ("coqui-tacotron2", "tts_models/en/ljspeech/tacotron2-DDC"),
-                ("coqui-glow-tts", "tts_models/en/ljspeech/glow-tts"),
-                ("coqui-waveglow", "tts_models/en/ljspeech/waveglow"),
-            ],
             "ai4bharat": [
                 ("ai4bharat-en", "ai4bharat/indic-tts-coqui-misc-gpu--t4"),
                 ("ai4bharat-kn", "ai4bharat/indic-tts-coqui-dravidian-gpu--t4"),
                 ("ai4bharat-ml", "ai4bharat/indic-tts-coqui-dravidian-gpu--t4"),
                 ("ai4bharat-hi", "ai4bharat/indic-tts-coqui-indo_aryan-gpu--t4")
+            ],
+            "coqui": [
+                ("coqui-tacotron2", "tts_models/en/ljspeech/tacotron2-DDC"),
+                ("coqui-glow-tts", "tts_models/en/ljspeech/glow-tts"),
+                ("coqui-waveglow", "tts_models/en/ljspeech/waveglow"),
             ]
         }
         self.loaded_model = self._load_model()

@@ -3,8 +3,24 @@ from core.db.init_db import init_db, shutdown_db
 from core.db.database import init_db, shutdown
 from fastapi.responses import FileResponse
 from core.api import stt, tts, user, language
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",  # Allow requests from your Next.js frontend
+    # Add any other origins if needed
+]
+
+# Add the CORS middleware to the FastAPI application
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # List of allowed origins
+    allow_credentials=True,  # Allow cookies to be sent
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
+
 
 app.include_router(stt.router)
 app.include_router(tts.router)

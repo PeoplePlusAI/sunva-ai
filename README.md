@@ -54,6 +54,7 @@ OPENAI_API_KEY=your_api_key
 BASE_MODEL=model_name (eg: Claude 3 Sonnet)
 SPEECH_BASE_MODEL=model_name (eg: Whisper Large)
 TTS_BASE_MODEL=model_name (eg: coqui-tacotron2)
+JWT_SECRET_KEY=your_secret_key
 ```
 5. Run the POC
 ```

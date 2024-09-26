@@ -14,13 +14,13 @@ load_dotenv(
         "ops/.env"
         )
 
-#DATABASE_URL = os.getenv("DATABASE_URL")
-DATABASE_URL = os.getenv("DATABASE_URL") + "?prepared_statement_cache_size=0"
+DATABASE_URL = os.getenv("DATABASE_URL")
+#DATABASE_URL = os.getenv("DATABASE_URL") + "?prepared_statement_cache_size=0"
 
 
 # Create the async engine
-#engine = create_async_engine(DATABASE_URL, echo=True, future=True)
-engine = create_async_engine(DATABASE_URL, echo=True, future=True, pool_size=5, max_overflow=10, connect_args={"statement_cache_size": 0}                     )
+engine = create_async_engine(DATABASE_URL, echo=True, future=True)
+#engine = create_async_engine(DATABASE_URL, echo=True, future=True, pool_size=5, max_overflow=10, connect_args={"statement_cache_size": 0}                     )
 
 # Create the async session factory
 async_session = sessionmaker(
