@@ -48,7 +48,11 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 # Endpoint to register a new user
 @router.post("/user/register", response_model=UserResponse)
-async def register_user(user_request: UserCreateRequest, response: Response, session: Session = Depends(get_session)):
+async def register_user(
+    user_request: UserCreateRequest, 
+    response: Response, 
+    session: Session = Depends(get_session)
+):
     # Hash the password
     password_hash = hash_password(user_request.password)
 
@@ -89,7 +93,11 @@ async def register_user(user_request: UserCreateRequest, response: Response, ses
     )
 
 
-    return UserResponse(user_id=new_user.user_id, email=new_user.email, access_token=access_token)
+    return UserResponse(
+        user_id=new_user.user_id, 
+        email=new_user.email, 
+        access_token=access_token
+    )
 
 # Endpoint to create a session (login)
 @router.post("/user/login", response_model=UserResponse)
@@ -160,7 +168,10 @@ async def logout(response: Response, credentials: HTTPAuthorizationCredentials =
 
 # Add this new endpoint after the existing ones
 @router.get("/user/verify", response_model=UserResponse)
-async def verify_token(request: Request, credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)):
+async def verify_token(
+    request: Request, 
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+):
     logger.info(f"Received request headers: {request.headers}")
     
     if not credentials:
