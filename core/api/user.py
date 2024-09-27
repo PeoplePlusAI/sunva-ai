@@ -153,27 +153,10 @@ async def create_session(
 
     return UserResponse(user_id=user.user_id, email=user.email, access_token=access_token)
 
-# Endpoint to delete a session (logout)
-@router.post("/user/logout")
-async def logout(response: Response, credentials: HTTPAuthorizationCredentials):
-    token = credentials.credentials
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        # In a real-world scenario, you might want to blacklist this token
-        # or remove it from a token store
-
-        response.delete_cookie(key="access_token")
-        return {"message": "Successfully logged out"}
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-
-
-
-@router.get("/user/verify")
-async def verify_token(request: Request):
-    access_token = request.cookies.get("access_token")
-    
+"""
+Util function that takes in the access token and returns ok if valid, else error
+"""
+def verify_access_cookie(access_token: str):
     if not access_token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token not found in cookies")
     
@@ -181,7 +164,6 @@ async def verify_token(request: Request):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token format")
     
     jwt_token = access_token.split(" ")[1]
-
     try:
         payload = jwt.decode(jwt_token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
@@ -207,3 +189,25 @@ async def verify_token(request: Request):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred"
         )
+
+# Endpoint to delete a session (logout)
+@router.post("/user/logout")
+async def logout(request: Request, response: Response):
+    access_token = request.cookies.get("access_token")
+    
+    try:
+        # Checks if the access token is valid, if not it errors out
+        # In a real-world scenario, you might want to blacklist this token
+        # or remove it from a token store
+        verify_access_cookie(access_token)
+
+        response.delete_cookie(key="access_token")
+        return {"message": "Successfully logged out"}
+    except Exception as e:
+        raise e
+
+
+@router.get("/user/verify")
+async def verify_token(request: Request):
+    access_token = request.cookies.get("access_token")
+    return verify_access_cookie(access_token)
