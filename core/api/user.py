@@ -18,6 +18,8 @@ import os
 from dotenv import load_dotenv
 import logging
 
+from core.utils.jwt_utils import verify_access_cookie
+
 # Load environment variables
 load_dotenv(
     "ops/.env"
@@ -153,43 +155,6 @@ async def create_session(
 
     return UserResponse(user_id=user.user_id, email=user.email, access_token=access_token)
 
-"""
-Util function that takes in the access token and returns ok if valid, else error
-"""
-def verify_access_cookie(access_token: str):
-    if not access_token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token not found in cookies")
-    
-    if not access_token.startswith("Bearer "):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token format")
-    
-    jwt_token = access_token.split(" ")[1]
-    try:
-        payload = jwt.decode(jwt_token, SECRET_KEY, algorithms=[ALGORITHM])
-        email = payload.get("sub")
-        user_id = payload.get("user_id")
-
-        if email is None or user_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid or expired token"
-            )
-
-        return {
-            "ok": True,
-        }
-
-    except JWTError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token"
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred"
-        )
-
 # Endpoint to delete a session (logout)
 @router.post("/user/logout")
 async def logout(request: Request, response: Response):
@@ -199,7 +164,7 @@ async def logout(request: Request, response: Response):
         # Checks if the access token is valid, if not it errors out
         # In a real-world scenario, you might want to blacklist this token
         # or remove it from a token store
-        verify_access_cookie(access_token)
+        verify_access_cookie(access_token, SECRET_KEY, ALGORITHM)
 
         response.delete_cookie(key="access_token")
         return {"message": "Successfully logged out"}
@@ -210,4 +175,4 @@ async def logout(request: Request, response: Response):
 @router.get("/user/verify")
 async def verify_token(request: Request):
     access_token = request.cookies.get("access_token")
-    return verify_access_cookie(access_token)
+    return verify_access_cookie(access_token, SECRET_KEY, ALGORITHM)
