@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, Header, Response, status, Request
+from fastapi import Cookie, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
@@ -154,7 +155,7 @@ async def create_session(
 
 # Endpoint to delete a session (logout)
 @router.post("/user/logout")
-async def logout(response: Response, credentials: HTTPAuthorizationCredentials = Depends(security)):
+async def logout(response: Response, credentials: HTTPAuthorizationCredentials):
     token = credentials.credentials
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -166,47 +167,42 @@ async def logout(response: Response, credentials: HTTPAuthorizationCredentials =
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-# Add this new endpoint after the existing ones
-@router.get("/user/verify", response_model=UserResponse)
-async def verify_token(
-    request: Request, 
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
-):
-    logger.info(f"Received request headers: {request.headers}")
+
+
+
+@router.get("/user/verify")
+async def verify_token(request: Request):
+    access_token = request.cookies.get("access_token")
     
-    if not credentials:
-        logger.warning("No credentials provided")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authorization header is missing"
-        )
+    if not access_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token not found in cookies")
     
-    token = credentials.credentials
-    logger.info(f"Received token: {token[:10]}...")  # Log first 10 characters of token for debugging
+    if not access_token.startswith("Bearer "):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token format")
     
+    jwt_token = access_token.split(" ")[1]
+
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(jwt_token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
         user_id = payload.get("user_id")
-        
-        logger.info(f"Decoded payload: email={email}, user_id={user_id}")
-        
+
         if email is None or user_id is None:
-            logger.warning("Invalid token payload")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token payload"
+                detail="Invalid or expired token"
             )
-        
-        return UserResponse(user_id=user_id, email=email, access_token=token)
+
+        return {
+            "ok": True,
+        }
+
     except JWTError as e:
-        logger.error(f"JWT decoding error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token"
         )
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred"
