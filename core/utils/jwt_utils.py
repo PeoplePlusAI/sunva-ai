@@ -4,6 +4,8 @@ from jose import JWTError, jwt
 
 """
 Util function that takes in the access token and returns ok if valid, else error
+
+NOTE: The access_token should be of the format 'Bearer <token>'
 """
 def verify_access_cookie(access_token: str, SECRET_KEY, ALGORITHM):
     if not access_token:
