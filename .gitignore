@@ -29,3 +29,4 @@ __pycache__/
 
 *.db
 *.rdb
+poetry.lock

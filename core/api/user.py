@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, Header, Response, status, Request
+from fastapi import Cookie, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
@@ -16,6 +17,8 @@ import uuid
 import os
 from dotenv import load_dotenv
 import logging
+
+from core.utils.jwt_utils import verify_access_cookie
 
 # Load environment variables
 load_dotenv(
@@ -154,60 +157,22 @@ async def create_session(
 
 # Endpoint to delete a session (logout)
 @router.post("/user/logout")
-async def logout(response: Response, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
+async def logout(request: Request, response: Response):
+    access_token = request.cookies.get("access_token")
+    
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        # Checks if the access token is valid, if not it errors out
         # In a real-world scenario, you might want to blacklist this token
         # or remove it from a token store
+        verify_access_cookie(access_token, SECRET_KEY, ALGORITHM)
 
         response.delete_cookie(key="access_token")
         return {"message": "Successfully logged out"}
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-# Add this new endpoint after the existing ones
-@router.get("/user/verify", response_model=UserResponse)
-async def verify_token(
-    request: Request, 
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
-):
-    logger.info(f"Received request headers: {request.headers}")
-    
-    if not credentials:
-        logger.warning("No credentials provided")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authorization header is missing"
-        )
-    
-    token = credentials.credentials
-    logger.info(f"Received token: {token[:10]}...")  # Log first 10 characters of token for debugging
-    
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email = payload.get("sub")
-        user_id = payload.get("user_id")
-        
-        logger.info(f"Decoded payload: email={email}, user_id={user_id}")
-        
-        if email is None or user_id is None:
-            logger.warning("Invalid token payload")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token payload"
-            )
-        
-        return UserResponse(user_id=user_id, email=email, access_token=token)
-    except JWTError as e:
-        logger.error(f"JWT decoding error: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token"
-        )
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred"
-        )
+        raise e
+
+
+@router.get("/user/verify")
+async def verify_token(request: Request):
+    access_token = request.cookies.get("access_token")
+    return verify_access_cookie(access_token, SECRET_KEY, ALGORITHM)
