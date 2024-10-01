@@ -110,7 +110,7 @@ async def create_session(
     session: Session = Depends(get_session),
     authorization: Optional[str] = Header(None)
 ):
-    # Check if the user is already logged in
+    #Check if the user is already logged in
     if authorization and authorization.startswith("Bearer "):
         token = authorization.split(" ")[1]
         try:
@@ -144,12 +144,13 @@ async def create_session(
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
+    print("Setting cookie")
     response.set_cookie(
         key="access_token",
         value=f"Bearer {access_token}",
-        httponly=True,
+        httponly=False,
         secure=True,
-        samesite="lax",
+        samesite="none",
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60
     )
 
