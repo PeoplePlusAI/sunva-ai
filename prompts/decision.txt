@@ -18,7 +18,7 @@ Follow these steps to make your determination
 
 # Output format
 
-Return True when the text can be summarized. Return False when the text cannot be summarized.
+Return True if the text is suitable for summarization. Return False if the text should remain in its full form.
 
 # Examples
 
