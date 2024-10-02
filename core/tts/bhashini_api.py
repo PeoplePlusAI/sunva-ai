@@ -145,7 +145,7 @@ class Bhashini:
                             "sourceLanguage": targetLanguage
                         },
                         "serviceId": ttsServiceId,
-                        "gender": "female",
+                        "gender": "male",
                         "samplingRate": 8000
                     }
                 }
